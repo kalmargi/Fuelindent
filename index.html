@@ -616,8 +616,12 @@ function buildPrint(d) {
   ${row('AMOUNT:', '₹' + d.amount.toFixed(2))}
   <div class="p-dbl"></div>
   <div class="p-sign-row">
+    <div class="p-sign"><div class="p-sign-line"></div>Driver</div>
     <div class="p-sign"><div class="p-sign-line"></div>${d.auth}</div>
   </div>
+  <div class="p-gap"></div>
+  <div class="p-center p-sm">Indian Oil Corporation</div>
+  <div class="p-gap"></div>`;
 }
 
 function generateIndent() {
@@ -651,7 +655,7 @@ function renderTable() {
     body.innerHTML = '<tr><td colspan="11" class="empty">No records yet.</td></tr>';
     return;
   }
-  body.innerHTML = records.slice().reverse().map(r => `
+  body.innerHTML = records.slice().map(r => `
     <tr>
       <td>${r.indentNo}</td>
       <td>${fmtDate(r.date)}</td>
