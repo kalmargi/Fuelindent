@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuel Challan Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap');
+
+  :root {
+    --ink: #1a1a2e;
+    --accent: #e63946;
+    --fuel: #f4a261;
+    --steel: #2d3561;
+    --light: #f8f9fa;
+    --mid: #e9ecef;
+    --muted: #6c757d;
+    --white: #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f0f1a;
+    color: var(--light);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    border-bottom: 3px solid var(--accent);
+    padding: 22px 40px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(230,57,70,0.15) 0%, transparent 70%);
+  }
+  .fuel-icon { font-size: 2.4rem; }
+  header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--white);
+  }
+  header h1 span { color: var(--accent); }
+  header p { font-size: 0.8rem; color: #8892b0; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 36px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 860px) { .container { grid-template-columns: 1fr; } }
+
+  /* ── FORM PANEL ── */
+  .panel {
+    background: #16213e;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .panel-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--fuel);
+    border-bottom: 1px solid rgba(244,162,97,0.3);
+    padding-bottom: 12px;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .full { grid-column: 1 / -1; }
+
+  label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: #8892b0;
+    margin-bottom: 6px;
+  }
+
+  input, select {
+    width: 100%;
+    background: #0f0f1a;
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: var(--light);
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(230,57,70,0.15);
+  }
+  input::placeholder { color: #4a4a6a; }
+
+  .challan-no-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(230,57,70,0.08);
+    border: 1px solid rgba(230,57,70,0.25);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+  }
+  .challan-no-row span:first-child {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: #8892b0;
+    flex: 1;
+  }
+  .challan-no-val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.1rem;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn-row { display: flex; gap: 12px; margin-top: 22px; }
+  .btn {
+    flex: 1;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 7px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(230,57,70,0.35);
+  }
+  .btn-primary:hover { background: #c1121f; transform: translateY(-1px); box-shadow: 0 6px 22px rgba(230,57,70,0.45); }
+  .btn-secondary {
+    background: var(--steel);
+    color: var(--light);
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .btn-secondary:hover { background: #3d4a7a; transform: translateY(-1px); }
+  .btn-success {
+    background: #2a9d8f;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(42,157,143,0.3);
+  }
+  .btn-success:hover { background: #21867a; transform: translateY(-1px); }
+
+  /* ── TABLE PANEL ── */
+  .table-panel {
+    grid-column: 1 / -1;
+    background: #16213e;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    overflow: hidden;
+  }
+  .table-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .record-count {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.85rem;
+    color: #8892b0;
+    background: rgba(255,255,255,0.05);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .table-wrapper { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+  thead tr {
+    background: linear-gradient(90deg, rgba(230,57,70,0.15) 0%, rgba(45,53,97,0.5) 100%);
+    border-bottom: 2px solid rgba(230,57,70,0.4);
+  }
+  th {
+    padding: 12px 14px;
+    text-align: left;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--fuel);
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: rgba(255,255,255,0.04); }
+  td {
+    padding: 11px 14px;
+    color: #c9d1e0;
+    font-size: 0.88rem;
+    white-space: nowrap;
+  }
+  td:nth-child(1) {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--accent);
+    font-size: 0.82rem;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(244,162,97,0.15);
+    color: var(--fuel);
+    border: 1px solid rgba(244,162,97,0.3);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 48px 0;
+    color: #4a4a6a;
+  }
+  .empty-state .icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+  .empty-state p { font-size: 0.9rem; letter-spacing: 1px; }
+
+  /* ── CHALLAN PREVIEW ── */
+  #challanPreview {
+    background: #16213e;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .preview-area {
+    background: #fff;
+    border-radius: 8px;
+    padding: 32px;
+    color: #111;
+    font-family: 'Barlow', sans-serif;
+    margin-top: 16px;
+    min-height: 280px;
+  }
+  .preview-area.empty-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    font-size: 0.9rem;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 240px;
+  }
+
+  /* ── PRINT CHALLAN DESIGN ── */
+  .challan-doc {
+    border: 2.5px solid #1a1a2e;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .ch-header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 16px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ch-header .org { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; }
+  .ch-header .challan-type { font-size: 0.7rem; letter-spacing: 2px; opacity: 0.7; margin-top: 2px; }
+  .ch-header .ch-no { text-align: right; }
+  .ch-header .ch-no .label { font-size: 0.62rem; letter-spacing: 1.5px; opacity: 0.7; }
+  .ch-header .ch-no .val { font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; color: #e63946; font-weight: 700; }
+
+  .ch-stripe {
+    background: #e63946;
+    height: 5px;
+  }
+  .ch-body { padding: 18px 22px; }
+  .ch-body .ch-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-align: center;
+    color: #1a1a2e;
+    text-transform: uppercase;
+    border-bottom: 1.5px dashed #ccc;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+  .ch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 20px;
+  }
+  .ch-field { border-bottom: 1.5px solid #ddd; padding-bottom: 4px; }
+  .ch-field .ch-label {
+    font-size: 0.62rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #888;
+    font-weight: 600;
+  }
+  .ch-field .ch-val {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #111;
+    margin-top: 2px;
+  }
+  .ch-amount {
+    margin-top: 14px;
+    background: #1a1a2e;
+    color: #fff;
+    border-radius: 6px;
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ch-amount .a-label { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; }
+  .ch-amount .a-val { font-family: 'Share Tech Mono', monospace; font-size: 1.4rem; color: #f4a261; font-weight: 700; }
+  .ch-footer {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1.5px dashed #ccc;
+  }
+  .ch-sign { font-size: 0.62rem; letter-spacing: 1.5px; text-transform: uppercase; color: #888; font-weight: 600; padding-top: 28px; border-top: 1.5px solid #333; }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    body { background: #fff; color: #000; }
+    header, .container > .panel:first-child, #challanPreview .panel-title,
+    #challanPreview .btn-row, .table-panel { display: none !important; }
+    #challanPreview {
+      background: #fff;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      border-radius: 0;
+    }
+    .preview-area {
+      border-radius: 0;
+      padding: 0;
+      margin: 0;
+    }
+    @page { margin: 14mm; size: A5; }
+  }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 30px; right: 30px;
+    background: #2a9d8f;
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 999;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="fuel-icon">⛽</span>
+  <div>
+    <h1>FUEL <span>CHALLAN</span> SYSTEM</h1>
+    <p>Vehicle Fuel Requisition & Record Management</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- FORM -->
+  <div class="panel">
+    <div class="panel-title">📋 New Challan</div>
+    <div class="challan-no-row">
+      <span>Challan No.</span>
+      <span class="challan-no-val" id="currentChallanNo">FC-0001</span>
+    </div>
+    <div class="form-grid">
+      <div>
+        <label>Date</label>
+        <input type="date" id="fDate">
+      </div>
+      <div>
+        <label>Driver Name</label>
+        <input type="text" id="fDriver" placeholder="Enter driver name">
+      </div>
+      <div>
+        <label>Vehicle Number</label>
+        <input type="text" id="fVehicle" placeholder="e.g. KA-01-AB-1234" style="text-transform:uppercase">
+      </div>
+      <div>
+        <label>Fuel Type</label>
+        <select id="fFuelType">
+          <option value="Petrol">Petrol</option>
+          <option value="Diesel">Diesel</option>
+          <option value="CNG">CNG</option>
+          <option value="Electric">Electric</option>
+        </select>
+      </div>
+      <div class="full">
+        <label>Petrol Bunk / Station</label>
+        <input type="text" id="fStation" placeholder="Enter fuel station name">
+      </div>
+      <div>
+        <label>Amount (₹)</label>
+        <input type="number" id="fAmount" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div>
+        <label>Quantity (Litres)</label>
+        <input type="number" id="fQty" placeholder="0.00" min="0" step="0.01">
+      </div>
+      <div class="full">
+        <label>Authorized By</label>
+        <input type="text" id="fAuth" placeholder="Authorizing officer / manager name">
+      </div>
+      <div class="full">
+        <label>Purpose / Remarks</label>
+        <input type="text" id="fRemarks" placeholder="Optional remarks">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="resetForm()">✕ Clear</button>
+      <button class="btn btn-primary" onclick="generateChallan()">⛽ Generate & Print</button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div id="challanPreview" class="panel">
+    <div class="panel-title">🖨️ Challan Preview</div>
+    <div class="preview-area empty-preview" id="previewArea">
+      <span style="font-size:2rem">📄</span>
+      <span>Fill the form and click Generate to preview challan</span>
+    </div>
+    <div class="btn-row" id="printRow" style="display:none">
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-panel">
+    <div class="table-header-row">
+      <div class="panel-title" style="margin:0">📊 Challan Records</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span class="record-count" id="recordCount">0 records</span>
+        <button class="btn btn-success" style="flex:unset;padding:8px 16px;font-size:0.82rem" onclick="exportExcel()">⬇ Export Excel</button>
+        <button class="btn btn-secondary" style="flex:unset;padding:8px 16px;font-size:0.82rem" onclick="clearAll()">🗑 Clear All</button>
+      </div>
+    </div>
+    <div class="table-wrapper">
+      <table id="recordsTable">
+        <thead>
+          <tr>
+            <th>Challan No.</th>
+            <th>Date</th>
+            <th>Driver</th>
+            <th>Vehicle No.</th>
+            <th>Station</th>
+            <th>Fuel</th>
+            <th>Qty (L)</th>
+            <th>Amount (₹)</th>
+            <th>Authorized By</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="recordsBody">
+          <tr><td colspan="10"><div class="empty-state"><span class="icon">📭</span><p>No challans generated yet</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ── State ──
+  let records = JSON.parse(localStorage.getItem('fuelChallans') || '[]');
+  let challanCounter = parseInt(localStorage.getItem('challanCounter') || '1');
+
+  // ── Init ──
+  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+  updateChallanNo();
+  renderTable();
+
+  function updateChallanNo() {
+    document.getElementById('currentChallanNo').textContent = 'FC-' + String(challanCounter).padStart(4, '0');
+  }
+
+  function toast(msg, color = '#2a9d8f') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = color;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  function getFormData() {
+    return {
+      challanNo: 'FC-' + String(challanCounter).padStart(4, '0'),
+      date: document.getElementById('fDate').value,
+      driver: document.getElementById('fDriver').value.trim(),
+      vehicle: document.getElementById('fVehicle').value.trim().toUpperCase(),
+      fuelType: document.getElementById('fFuelType').value,
+      station: document.getElementById('fStation').value.trim(),
+      amount: parseFloat(document.getElementById('fAmount').value) || 0,
+      qty: parseFloat(document.getElementById('fQty').value) || 0,
+      auth: document.getElementById('fAuth').value.trim(),
+      remarks: document.getElementById('fRemarks').value.trim(),
+    };
+  }
+
+  function validate(d) {
+    if (!d.driver) { toast('⚠ Enter driver name', '#e63946'); return false; }
+    if (!d.vehicle) { toast('⚠ Enter vehicle number', '#e63946'); return false; }
+    if (!d.station) { toast('⚠ Enter petrol bunk / station', '#e63946'); return false; }
+    if (!d.amount) { toast('⚠ Enter amount', '#e63946'); return false; }
+    if (!d.auth) { toast('⚠ Enter authorized by', '#e63946'); return false; }
+    if (!d.date) { toast('⚠ Enter date', '#e63946'); return false; }
+    return true;
+  }
+
+  function buildChallanHTML(d) {
+    const fmt = (v) => new Date(v).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
+    return `
+    <div class="challan-doc">
+      <div class="ch-header">
+        <div>
+          <div class="org">⛽ FUEL REQUISITION</div>
+          <div class="challan-type">VEHICLE FUEL CHALLAN</div>
+        </div>
+        <div class="ch-no">
+          <div class="label">CHALLAN NO.</div>
+          <div class="val">${d.challanNo}</div>
+        </div>
+      </div>
+      <div class="ch-stripe"></div>
+      <div class="ch-body">
+        <div class="ch-title">Fuel Issue Certificate</div>
+        <div class="ch-grid">
+          <div class="ch-field">
+            <div class="ch-label">Date</div>
+            <div class="ch-val">${fmt(d.date)}</div>
+          </div>
+          <div class="ch-field">
+            <div class="ch-label">Fuel Type</div>
+            <div class="ch-val">${d.fuelType}</div>
+          </div>
+          <div class="ch-field">
+            <div class="ch-label">Driver Name</div>
+            <div class="ch-val">${d.driver}</div>
+          </div>
+          <div class="ch-field">
+            <div class="ch-label">Vehicle Number</div>
+            <div class="ch-val" style="font-family:'Share Tech Mono',monospace;letter-spacing:1px">${d.vehicle}</div>
+          </div>
+          <div class="ch-field" style="grid-column:1/-1">
+            <div class="ch-label">Petrol Bunk / Station</div>
+            <div class="ch-val">${d.station}</div>
+          </div>
+          ${d.remarks ? `<div class="ch-field" style="grid-column:1/-1"><div class="ch-label">Remarks</div><div class="ch-val">${d.remarks}</div></div>` : ''}
+        </div>
+        <div class="ch-amount">
+          <div>
+            <div class="a-label">Quantity Filled</div>
+            <div style="color:#fff;font-family:'Share Tech Mono',monospace;font-size:1.1rem">${d.qty > 0 ? d.qty + ' L' : '— L'}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="a-label">Total Amount</div>
+            <div class="a-val">₹${d.amount.toLocaleString('en-IN', {minimumFractionDigits:2})}</div>
+          </div>
+        </div>
+        <div class="ch-footer">
+          <div>
+            <div class="ch-sign">Driver's Signature</div>
+          </div>
+          <div style="text-align:right">
+            <div class="ch-sign">Authorized By: <strong style="color:#111">${d.auth}</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function generateChallan() {
+    const d = getFormData();
+    if (!validate(d)) return;
+
+    // Render preview
+    document.getElementById('previewArea').className = 'preview-area';
+    document.getElementById('previewArea').innerHTML = buildChallanHTML(d);
+    document.getElementById('printRow').style.display = 'flex';
+
+    // Save record
+    records.push(d);
+    localStorage.setItem('fuelChallans', JSON.stringify(records));
+
+    // Increment counter
+    challanCounter++;
+    localStorage.setItem('challanCounter', String(challanCounter));
+    updateChallanNo();
+
+    renderTable();
+    toast('✅ Challan ' + d.challanNo + ' generated!');
+
+    // Auto-print after short delay
+    setTimeout(() => window.print(), 400);
+  }
+
+  function renderTable() {
+    const body = document.getElementById('recordsBody');
+    document.getElementById('recordCount').textContent = records.length + ' record' + (records.length !== 1 ? 's' : '');
+    if (records.length === 0) {
+      body.innerHTML = '<tr><td colspan="10"><div class="empty-state"><span class="icon">📭</span><p>No challans generated yet</p></div></td></tr>';
+      return;
+    }
+    body.innerHTML = records.slice().reverse().map(r => `
+      <tr>
+        <td>${r.challanNo}</td>
+        <td>${r.date}</td>
+        <td>${r.driver}</td>
+        <td><span class="badge">${r.vehicle}</span></td>
+        <td>${r.station}</td>
+        <td>${r.fuelType}</td>
+        <td>${r.qty > 0 ? r.qty : '—'}</td>
+        <td>₹${r.amount.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+        <td>${r.auth}</td>
+        <td>${r.remarks || '—'}</td>
+      </tr>`).join('');
+  }
+
+  function exportExcel() {
+    if (records.length === 0) { toast('⚠ No records to export', '#e63946'); return; }
+    const ws_data = [
+      ['Challan No.', 'Date', 'Driver Name', 'Vehicle No.', 'Fuel Type', 'Station', 'Quantity (L)', 'Amount (₹)', 'Authorized By', 'Remarks'],
+      ...records.map(r => [r.challanNo, r.date, r.driver, r.vehicle, r.fuelType, r.station, r.qty || '', r.amount, r.auth, r.remarks || ''])
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    // Column widths
+    ws['!cols'] = [12,12,20,16,10,28,14,14,22,24].map(w => ({wch:w}));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Fuel Challans');
+    XLSX.writeFile(wb, 'Fuel_Challans_' + new Date().toISOString().slice(0,10) + '.xlsx');
+    toast('📥 Excel exported successfully!');
+  }
+
+  function resetForm() {
+    ['fDriver','fVehicle','fStation','fAmount','fQty','fAuth','fRemarks'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('fFuelType').value = 'Petrol';
+    document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+  }
+
+  function clearAll() {
+    if (!confirm('Clear ALL challan records? This cannot be undone.')) return;
+    records = [];
+    challanCounter = 1;
+    localStorage.setItem('fuelChallans', '[]');
+    localStorage.setItem('challanCounter', '1');
+    updateChallanNo();
+    renderTable();
+    toast('🗑 All records cleared', '#e63946');
+  }
+</script>
+</body>
+</html>
