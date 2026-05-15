@@ -3,726 +3,763 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fuel Challan Generator</title>
+<title>Fuel Indent</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --ink: #1a1a2e;
-    --accent: #e63946;
-    --fuel: #f4a261;
-    --steel: #2d3561;
-    --light: #f8f9fa;
-    --mid: #e9ecef;
-    --muted: #6c757d;
-    --white: #ffffff;
-  }
+body {
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  background: #e8e8e8;
+  padding: 12px;
+}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── NAV TABS ── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.tab {
+  padding: 7px 18px;
+  border: 1px solid #999;
+  background: #ddd;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+}
+.tab.active {
+  background: #fff;
+  border-bottom: 1px solid #fff;
+  position: relative;
+  top: 1px;
+}
 
-  body {
-    background: #0f0f1a;
-    color: var(--light);
-    font-family: 'Barlow', sans-serif;
-    min-height: 100vh;
-  }
+.page { display: none; }
+.page.active { display: block; }
 
-  /* ── HEADER ── */
-  header {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
-    border-bottom: 3px solid var(--accent);
-    padding: 22px 40px;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    position: relative;
-    overflow: hidden;
-  }
-  header::after {
-    content: '';
-    position: absolute;
-    right: -40px; top: -40px;
-    width: 200px; height: 200px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(230,57,70,0.15) 0%, transparent 70%);
-  }
-  .fuel-icon { font-size: 2.4rem; }
-  header h1 {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--white);
-  }
-  header h1 span { color: var(--accent); }
-  header p { font-size: 0.8rem; color: #8892b0; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+/* ── CARD ── */
+.card {
+  background: #fff;
+  border: 1px solid #bbb;
+  padding: 14px;
+  max-width: 480px;
+  margin: 0 auto 14px auto;
+}
+.card h3 {
+  font-size: 13px;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
 
-  /* ── LAYOUT ── */
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 36px 24px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 32px;
-  }
-  @media (max-width: 860px) { .container { grid-template-columns: 1fr; } }
+/* ── FORM ── */
+.field { margin-bottom: 9px; }
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 3px;
+}
+.field select, .field input[type="text"], .field input[type="number"], .field input[type="date"] {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1px solid #bbb;
+}
+.field select:focus, .field input:focus { outline: 2px solid #333; }
 
-  /* ── FORM PANEL ── */
-  .panel {
-    background: #16213e;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 28px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-  }
-  .panel-title {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1.15rem;
-    font-weight: 600;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--fuel);
-    border-bottom: 1px solid rgba(244,162,97,0.3);
-    padding-bottom: 12px;
-    margin-bottom: 22px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+.row2 { display: flex; gap: 8px; }
+.row2 .field { flex: 1; }
 
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .full { grid-column: 1 / -1; }
+.auto-val {
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-weight: bold;
+  min-height: 30px;
+  color: #111;
+}
 
-  label {
-    display: block;
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    color: #8892b0;
-    margin-bottom: 6px;
-  }
+.err { color: #c00; font-size: 11px; margin-top: 5px; min-height: 16px; }
 
-  input, select {
-    width: 100%;
-    background: #0f0f1a;
-    border: 1.5px solid rgba(255,255,255,0.1);
-    border-radius: 6px;
-    padding: 10px 14px;
-    color: var(--light);
-    font-family: 'Barlow', sans-serif;
-    font-size: 0.95rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    outline: none;
-  }
-  input:focus, select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(230,57,70,0.15);
-  }
-  input::placeholder { color: #4a4a6a; }
+/* ── BUTTONS ── */
+.btn-row { display: flex; gap: 8px; margin-top: 10px; }
+button {
+  flex: 1;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: bold;
+  border: 1px solid #555;
+  background: #fff;
+  cursor: pointer;
+}
+button:hover { background: #eee; }
+.btn-dark { background: #222; color: #fff; border-color: #222; }
+.btn-dark:hover { background: #444; }
+.btn-green { background: #1a6630; color: #fff; border-color: #1a6630; }
+.btn-green:hover { background: #0f4a22; }
+.btn-red { background: #a00; color: #fff; border-color: #a00; }
+.btn-red:hover { background: #c00; }
 
-  .challan-no-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: rgba(230,57,70,0.08);
-    border: 1px solid rgba(230,57,70,0.25);
-    border-radius: 6px;
-    padding: 10px 14px;
-    margin-bottom: 20px;
-  }
-  .challan-no-row span:first-child {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    color: #8892b0;
-    flex: 1;
-  }
-  .challan-no-val {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 1.1rem;
-    color: var(--accent);
-    font-weight: 700;
-    letter-spacing: 2px;
-  }
+/* ── RECORDS TABLE ── */
+.records-card {
+  background: #fff;
+  border: 1px solid #bbb;
+  padding: 14px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.rec-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rec-hdr h3 { font-size: 13px; font-weight: bold; text-transform: uppercase; }
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { background: #333; color: #fff; padding: 6px 8px; text-align: left; font-size: 11px; white-space: nowrap; }
+td { padding: 5px 8px; border-bottom: 1px solid #e0e0e0; white-space: nowrap; }
+tr:hover td { background: #f9f9f9; }
+.empty { text-align: center; padding: 20px; color: #999; }
 
-  /* ── BUTTONS ── */
-  .btn-row { display: flex; gap: 12px; margin-top: 22px; }
-  .btn {
-    flex: 1;
-    padding: 11px 16px;
-    border: none;
-    border-radius: 7px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.95rem;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.18s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-  }
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 4px 18px rgba(230,57,70,0.35);
-  }
-  .btn-primary:hover { background: #c1121f; transform: translateY(-1px); box-shadow: 0 6px 22px rgba(230,57,70,0.45); }
-  .btn-secondary {
-    background: var(--steel);
-    color: var(--light);
-    border: 1px solid rgba(255,255,255,0.12);
-  }
-  .btn-secondary:hover { background: #3d4a7a; transform: translateY(-1px); }
-  .btn-success {
-    background: #2a9d8f;
-    color: #fff;
-    box-shadow: 0 4px 14px rgba(42,157,143,0.3);
-  }
-  .btn-success:hover { background: #21867a; transform: translateY(-1px); }
+/* ── SETTINGS ── */
+.settings-card {
+  background: #fff;
+  border: 1px solid #bbb;
+  padding: 14px;
+  max-width: 540px;
+  margin: 0 auto 14px auto;
+}
+.settings-card h3 {
+  font-size: 13px;
+  font-weight: bold;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+.co-section {
+  margin-bottom: 14px;
+  border: 1px solid #ddd;
+  padding: 10px;
+}
+.co-section h4 {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  color: #333;
+}
+.list-editor { display: flex; flex-direction: column; gap: 5px; margin-bottom: 6px; }
+.list-item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.list-item input {
+  flex: 1;
+  padding: 4px 6px;
+  font-size: 12px;
+  border: 1px solid #bbb;
+}
+.list-item button {
+  flex: none;
+  padding: 4px 8px;
+  font-size: 12px;
+  background: #eee;
+  border: 1px solid #bbb;
+  color: #a00;
+  font-weight: bold;
+  cursor: pointer;
+}
+.list-item button:hover { background: #fdd; }
+.add-btn {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: #eee;
+  border: 1px solid #bbb;
+  cursor: pointer;
+  font-weight: bold;
+}
+.add-btn:hover { background: #ddd; }
+.co-name-input {
+  width: 100%;
+  padding: 5px 7px;
+  font-size: 13px;
+  border: 1px solid #bbb;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
 
-  /* ── TABLE PANEL ── */
-  .table-panel {
-    grid-column: 1 / -1;
-    background: #16213e;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 28px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    overflow: hidden;
-  }
-  .table-header-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 18px;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .record-count {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 0.85rem;
-    color: #8892b0;
-    background: rgba(255,255,255,0.05);
-    padding: 4px 12px;
-    border-radius: 20px;
-  }
+/* ── PASSWORD LOCK ── */
+.lock-screen {
+  background: #fff;
+  border: 1px solid #bbb;
+  padding: 24px 18px;
+  max-width: 320px;
+  margin: 40px auto;
+  text-align: center;
+}
+.lock-screen .lock-icon { font-size: 2rem; margin-bottom: 10px; }
+.lock-screen h3 {
+  font-size: 13px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  letter-spacing: 0.5px;
+}
+.lock-screen input[type="password"] {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #bbb;
+  margin-bottom: 8px;
+  text-align: center;
+  letter-spacing: 3px;
+}
+.lock-screen input[type="password"]:focus { outline: 2px solid #333; }
+.lock-err { color: #c00; font-size: 11px; min-height: 16px; margin-bottom: 6px; }
+.lock-hint { font-size: 10px; color: #999; margin-top: 8px; }
+.change-pw-section {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 12px;
+  max-width: 540px;
+  margin: 0 auto 12px auto;
+}
+.change-pw-section h4 {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  color: #333;
+}
+.pw-row { display: flex; gap: 8px; align-items: center; margin-bottom: 7px; }
+.pw-row label { font-size: 11px; font-weight: bold; width: 120px; flex-shrink: 0; text-transform: uppercase; color: #555; }
+.pw-row input { flex: 1; padding: 5px 7px; font-size: 13px; border: 1px solid #bbb; }
 
-  .table-wrapper { overflow-x: auto; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.88rem;
-  }
-  thead tr {
-    background: linear-gradient(90deg, rgba(230,57,70,0.15) 0%, rgba(45,53,97,0.5) 100%);
-    border-bottom: 2px solid rgba(230,57,70,0.4);
-  }
-  th {
-    padding: 12px 14px;
-    text-align: left;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    color: var(--fuel);
-    white-space: nowrap;
-  }
-  tbody tr {
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    transition: background 0.15s;
-  }
-  tbody tr:hover { background: rgba(255,255,255,0.04); }
-  td {
-    padding: 11px 14px;
-    color: #c9d1e0;
-    font-size: 0.88rem;
-    white-space: nowrap;
-  }
-  td:nth-child(1) {
-    font-family: 'Share Tech Mono', monospace;
-    color: var(--accent);
-    font-size: 0.82rem;
-  }
-  .badge {
-    display: inline-block;
-    background: rgba(244,162,97,0.15);
-    color: var(--fuel);
-    border: 1px solid rgba(244,162,97,0.3);
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    font-family: 'Share Tech Mono', monospace;
-  }
-  .empty-state {
-    text-align: center;
-    padding: 48px 0;
-    color: #4a4a6a;
-  }
-  .empty-state .icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
-  .empty-state p { font-size: 0.9rem; letter-spacing: 1px; }
+/* ── PRINT STYLES ── */
+#printArea { display: none; }
 
-  /* ── CHALLAN PREVIEW ── */
-  #challanPreview {
-    background: #16213e;
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 28px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+@media print {
+  body > *:not(#printArea) { display: none !important; }
+  #printArea {
+    display: block !important;
+    width: 72mm;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 8.5pt;
+    color: #000;
+    padding: 1mm 2mm;
   }
-  .preview-area {
-    background: #fff;
-    border-radius: 8px;
-    padding: 32px;
-    color: #111;
-    font-family: 'Barlow', sans-serif;
-    margin-top: 16px;
-    min-height: 280px;
-  }
-  .preview-area.empty-preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #aaa;
-    font-size: 0.9rem;
-    flex-direction: column;
-    gap: 8px;
-    min-height: 240px;
-  }
+  @page { size: 80mm auto; margin: 0; }
 
-  /* ── PRINT CHALLAN DESIGN ── */
-  .challan-doc {
-    border: 2.5px solid #1a1a2e;
-    border-radius: 6px;
-    overflow: hidden;
-  }
-  .ch-header {
-    background: #1a1a2e;
-    color: #fff;
-    padding: 16px 22px;
+  .p-center { text-align: center; }
+  .p-bold { font-weight: bold; }
+  .p-big { font-size: 10.5pt; font-weight: bold; }
+  .p-sm { font-size: 7.5pt; }
+  .p-line { border-top: 1px dashed #000; margin: 3px 0; }
+  .p-dbl { border-top: 2px solid #000; margin: 3px 0; }
+  .p-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    margin: 2px 0;
+    gap: 4px;
   }
-  .ch-header .org { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; }
-  .ch-header .challan-type { font-size: 0.7rem; letter-spacing: 2px; opacity: 0.7; margin-top: 2px; }
-  .ch-header .ch-no { text-align: right; }
-  .ch-header .ch-no .label { font-size: 0.62rem; letter-spacing: 1.5px; opacity: 0.7; }
-  .ch-header .ch-no .val { font-family: 'Share Tech Mono', monospace; font-size: 1.1rem; color: #e63946; font-weight: 700; }
-
-  .ch-stripe {
-    background: #e63946;
-    height: 5px;
-  }
-  .ch-body { padding: 18px 22px; }
-  .ch-body .ch-title {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-align: center;
-    color: #1a1a2e;
-    text-transform: uppercase;
-    border-bottom: 1.5px dashed #ccc;
-    padding-bottom: 12px;
-    margin-bottom: 16px;
-  }
-  .ch-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px 20px;
-  }
-  .ch-field { border-bottom: 1.5px solid #ddd; padding-bottom: 4px; }
-  .ch-field .ch-label {
-    font-size: 0.62rem;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: #888;
-    font-weight: 600;
-  }
-  .ch-field .ch-val {
-    font-size: 0.92rem;
-    font-weight: 600;
-    color: #111;
-    margin-top: 2px;
-  }
-  .ch-amount {
-    margin-top: 14px;
-    background: #1a1a2e;
-    color: #fff;
-    border-radius: 6px;
-    padding: 12px 18px;
+  .p-lbl { flex-shrink: 0; }
+  .p-val { text-align: right; font-weight: bold; word-break: break-all; }
+  .p-sign-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    margin-top: 8mm;
   }
-  .ch-amount .a-label { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; }
-  .ch-amount .a-val { font-family: 'Share Tech Mono', monospace; font-size: 1.4rem; color: #f4a261; font-weight: 700; }
-  .ch-footer {
-    margin-top: 16px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding-top: 10px;
-    border-top: 1.5px dashed #ccc;
-  }
-  .ch-sign { font-size: 0.62rem; letter-spacing: 1.5px; text-transform: uppercase; color: #888; font-weight: 600; padding-top: 28px; border-top: 1.5px solid #333; }
-
-  /* ── PRINT STYLES ── */
-  @media print {
-    body { background: #fff; color: #000; }
-    header, .container > .panel:first-child, #challanPreview .panel-title,
-    #challanPreview .btn-row, .table-panel { display: none !important; }
-    #challanPreview {
-      background: #fff;
-      border: none;
-      box-shadow: none;
-      padding: 0;
-      border-radius: 0;
-    }
-    .preview-area {
-      border-radius: 0;
-      padding: 0;
-      margin: 0;
-    }
-    @page { margin: 14mm; size: A5; }
-  }
-
-  /* ── TOAST ── */
-  #toast {
-    position: fixed;
-    bottom: 30px; right: 30px;
-    background: #2a9d8f;
-    color: #fff;
-    padding: 12px 22px;
-    border-radius: 8px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 0.95rem;
-    letter-spacing: 1px;
-    font-weight: 600;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.3s;
-    pointer-events: none;
-    z-index: 999;
-  }
-  #toast.show { opacity: 1; transform: translateY(0); }
+  .p-sign { text-align: center; font-size: 7.5pt; }
+  .p-sign-line { border-top: 1px solid #000; width: 27mm; margin: 0 auto 2px auto; }
+  .p-gap { height: 3mm; }
+}
 </style>
 </head>
 <body>
 
-<header>
-  <span class="fuel-icon">⛽</span>
-  <div>
-    <h1>FUEL <span>CHALLAN</span> SYSTEM</h1>
-    <p>Vehicle Fuel Requisition & Record Management</p>
-  </div>
-</header>
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="showTab('indent')">New Indent</div>
+  <div class="tab" onclick="showTab('records')">Records</div>
+  <div class="tab" onclick="showTab('settings')">Settings</div>
+</div>
 
-<div class="container">
+<!-- ══════════ INDENT FORM ══════════ -->
+<div id="page-indent" class="page active">
+  <div class="card">
+    <h3>Fuel Indent</h3>
 
-  <!-- FORM -->
-  <div class="panel">
-    <div class="panel-title">📋 New Challan</div>
-    <div class="challan-no-row">
-      <span>Challan No.</span>
-      <span class="challan-no-val" id="currentChallanNo">FC-0001</span>
+    <!-- STEP 1: Company -->
+    <div class="field">
+      <label>Company</label>
+      <select id="fCompany" onchange="onCompanyChange()">
+        <option value="">-- Select Company --</option>
+      </select>
     </div>
-    <div class="form-grid">
-      <div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Indent No.</label>
+        <div class="auto-val" id="dispIndentNo">—</div>
+      </div>
+      <div class="field">
         <label>Date</label>
         <input type="date" id="fDate">
       </div>
-      <div>
-        <label>Driver Name</label>
-        <input type="text" id="fDriver" placeholder="Enter driver name">
-      </div>
-      <div>
-        <label>Vehicle Number</label>
-        <input type="text" id="fVehicle" placeholder="e.g. KA-01-AB-1234" style="text-transform:uppercase">
-      </div>
-      <div>
+    </div>
+
+    <div class="field">
+      <label>Driver Name</label>
+      <select id="fDriver" disabled>
+        <option value="">-- Select Company First --</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Vehicle Number</label>
+      <select id="fVehicle" disabled>
+        <option value="">-- Select Company First --</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Petrol Bunk / Station</label>
+      <select id="fStation" disabled>
+        <option value="">-- Select Company First --</option>
+      </select>
+    </div>
+
+    <div class="row2">
+      <div class="field">
         <label>Fuel Type</label>
-        <select id="fFuelType">
+        <select id="fFuel" onchange="onFuelChange()" disabled>
+          <option value="">-- Select --</option>
           <option value="Petrol">Petrol</option>
           <option value="Diesel">Diesel</option>
           <option value="CNG">CNG</option>
-          <option value="Electric">Electric</option>
         </select>
       </div>
-      <div class="full">
-        <label>Petrol Bunk / Station</label>
-        <input type="text" id="fStation" placeholder="Enter fuel station name">
-      </div>
-      <div>
-        <label>Amount (₹)</label>
-        <input type="number" id="fAmount" placeholder="0.00" min="0" step="0.01">
-      </div>
-      <div>
-        <label>Quantity (Litres)</label>
-        <input type="number" id="fQty" placeholder="0.00" min="0" step="0.01">
-      </div>
-      <div class="full">
+      <div class="field">
         <label>Authorized By</label>
-        <input type="text" id="fAuth" placeholder="Authorizing officer / manager name">
-      </div>
-      <div class="full">
-        <label>Purpose / Remarks</label>
-        <input type="text" id="fRemarks" placeholder="Optional remarks">
+        <select id="fAuth" disabled>
+          <option value="">-- Select Company First --</option>
+        </select>
       </div>
     </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>IOC Rate/Litre (₹)</label>
+        <div class="auto-val" id="dispRate">—</div>
+      </div>
+      <div class="field">
+        <label>Amount (₹)</label>
+        <input type="number" id="fAmount" placeholder="0.00" step="0.01" min="0" oninput="calcLitres()">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Litres (auto-calculated)</label>
+      <div class="auto-val" id="dispLitres">—</div>
+    </div>
+
+    <div class="err" id="errMsg"></div>
+
     <div class="btn-row">
-      <button class="btn btn-secondary" onclick="resetForm()">✕ Clear</button>
-      <button class="btn btn-primary" onclick="generateChallan()">⛽ Generate & Print</button>
+      <button onclick="resetForm()">Clear</button>
+      <button class="btn-dark" onclick="generateIndent()">Print Indent</button>
+      <button class="btn-green" onclick="exportExcel()">Export Excel</button>
     </div>
   </div>
+</div>
 
-  <!-- PREVIEW -->
-  <div id="challanPreview" class="panel">
-    <div class="panel-title">🖨️ Challan Preview</div>
-    <div class="preview-area empty-preview" id="previewArea">
-      <span style="font-size:2rem">📄</span>
-      <span>Fill the form and click Generate to preview challan</span>
-    </div>
-    <div class="btn-row" id="printRow" style="display:none">
-      <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
-    </div>
-  </div>
-
-  <!-- TABLE -->
-  <div class="table-panel">
-    <div class="table-header-row">
-      <div class="panel-title" style="margin:0">📊 Challan Records</div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-        <span class="record-count" id="recordCount">0 records</span>
-        <button class="btn btn-success" style="flex:unset;padding:8px 16px;font-size:0.82rem" onclick="exportExcel()">⬇ Export Excel</button>
-        <button class="btn btn-secondary" style="flex:unset;padding:8px 16px;font-size:0.82rem" onclick="clearAll()">🗑 Clear All</button>
+<!-- ══════════ RECORDS ══════════ -->
+<div id="page-records" class="page">
+  <div class="records-card">
+    <div class="rec-hdr">
+      <h3>Indent Records</h3>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span id="recCount" style="font-size:11px;color:#666;">0 records</span>
+        <button class="btn-red" style="flex:none;padding:5px 12px;font-size:12px;" onclick="clearAll()">Clear All</button>
+        <button class="btn-green" style="flex:none;padding:5px 12px;font-size:12px;" onclick="exportExcel()">Export Excel</button>
       </div>
     </div>
-    <div class="table-wrapper">
-      <table id="recordsTable">
+    <div class="tbl-wrap">
+      <table>
         <thead>
           <tr>
-            <th>Challan No.</th>
-            <th>Date</th>
-            <th>Driver</th>
-            <th>Vehicle No.</th>
-            <th>Station</th>
-            <th>Fuel</th>
-            <th>Qty (L)</th>
-            <th>Amount (₹)</th>
-            <th>Authorized By</th>
-            <th>Remarks</th>
+            <th>Indent No</th><th>Date</th><th>Company</th><th>Driver</th>
+            <th>Vehicle</th><th>Station</th><th>Fuel</th>
+            <th>Rate/L</th><th>Litres</th><th>Amount</th><th>Auth By</th>
           </tr>
         </thead>
-        <tbody id="recordsBody">
-          <tr><td colspan="10"><div class="empty-state"><span class="icon">📭</span><p>No challans generated yet</p></div></td></tr>
+        <tbody id="recBody">
+          <tr><td colspan="11" class="empty">No records yet.</td></tr>
         </tbody>
       </table>
     </div>
   </div>
-
 </div>
 
-<div id="toast"></div>
+<!-- ══════════ SETTINGS ══════════ -->
+<div id="page-settings" class="page">
+  <div id="settingsContainer"></div>
+  <div style="max-width:540px;margin:0 auto;">
+    <div class="btn-row">
+      <button class="btn-dark" onclick="saveSettings()">Save Settings</button>
+    </div>
+    <div class="err" id="settingsMsg" style="color:green;margin-top:6px;"></div>
+  </div>
+</div>
+
+<!-- PRINT AREA -->
+<div id="printArea"></div>
 
 <script>
-  // ── State ──
-  let records = JSON.parse(localStorage.getItem('fuelChallans') || '[]');
-  let challanCounter = parseInt(localStorage.getItem('challanCounter') || '1');
+// ══════════════════════════════════════════
+// DEFAULT IOC RATES (Karnataka, May 2026)
+// ══════════════════════════════════════════
+const IOC = { Petrol: 102.92, Diesel: 90.99, CNG: 78.00 };
 
-  // ── Init ──
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let records = JSON.parse(localStorage.getItem('fi_records') || '[]');
+let counter = parseInt(localStorage.getItem('fi_counter') || '1');
+
+// Default companies config
+const DEFAULT_COMPANIES = [
+  {
+    name: 'Company A',
+    drivers: ['Driver 1', 'Driver 2'],
+    vehicles: ['KA-01-AA-0001', 'KA-01-AA-0002'],
+    stations: ['Indian Oil, MG Road', 'Indian Oil, Hebbal'],
+    authorizers: ['Manager A']
+  },
+  {
+    name: 'Company B',
+    drivers: ['Driver 3', 'Driver 4'],
+    vehicles: ['KA-02-BB-0001', 'KA-02-BB-0002'],
+    stations: ['Indian Oil, Whitefield', 'Indian Oil, Koramangala'],
+    authorizers: ['Manager B']
+  }
+];
+
+let companies = JSON.parse(localStorage.getItem('fi_companies') || JSON.stringify(DEFAULT_COMPANIES));
+
+// ══════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['indent','records','settings'][i] === name);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'settings') renderSettings();
+  if (name === 'records') renderTable();
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+window.onload = function() {
   document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
-  updateChallanNo();
+  populateCompanies();
+  updateIndentNo();
   renderTable();
+};
 
-  function updateChallanNo() {
-    document.getElementById('currentChallanNo').textContent = 'FC-' + String(challanCounter).padStart(4, '0');
+function updateIndentNo() {
+  document.getElementById('dispIndentNo').textContent = 'FI-' + String(counter).padStart(4,'0');
+}
+
+function populateCompanies() {
+  const sel = document.getElementById('fCompany');
+  sel.innerHTML = '<option value="">-- Select Company --</option>';
+  companies.forEach((c, i) => {
+    const o = document.createElement('option');
+    o.value = i;
+    o.textContent = c.name;
+    sel.appendChild(o);
+  });
+}
+
+function onCompanyChange() {
+  const idx = document.getElementById('fCompany').value;
+  const fields = ['fDriver','fVehicle','fStation','fAuth','fFuel'];
+  if (idx === '') {
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      el.disabled = true;
+      el.innerHTML = '<option value="">-- Select Company First --</option>';
+    });
+    document.getElementById('dispRate').textContent = '—';
+    document.getElementById('dispLitres').textContent = '—';
+    return;
   }
+  const c = companies[parseInt(idx)];
+  fields.forEach(id => document.getElementById(id).disabled = false);
 
-  function toast(msg, color = '#2a9d8f') {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.background = color;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2800);
+  fillSelect('fDriver', c.drivers);
+  fillSelect('fVehicle', c.vehicles);
+  fillSelect('fStation', c.stations);
+  fillSelect('fAuth', c.authorizers);
+
+  // Reset fuel
+  document.getElementById('fFuel').value = '';
+  document.getElementById('dispRate').textContent = '—';
+  document.getElementById('dispLitres').textContent = '—';
+}
+
+function fillSelect(id, items) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '<option value="">-- Select --</option>';
+  items.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    sel.appendChild(o);
+  });
+}
+
+function onFuelChange() {
+  const f = document.getElementById('fFuel').value;
+  document.getElementById('dispRate').textContent = f ? '₹' + IOC[f].toFixed(2) : '—';
+  calcLitres();
+}
+
+function calcLitres() {
+  const amt = parseFloat(document.getElementById('fAmount').value) || 0;
+  const f = document.getElementById('fFuel').value;
+  const rate = f ? IOC[f] : 0;
+  if (amt > 0 && rate > 0) {
+    document.getElementById('dispLitres').textContent = (amt / rate).toFixed(2) + ' L';
+  } else {
+    document.getElementById('dispLitres').textContent = '—';
   }
+}
 
-  function getFormData() {
-    return {
-      challanNo: 'FC-' + String(challanCounter).padStart(4, '0'),
-      date: document.getElementById('fDate').value,
-      driver: document.getElementById('fDriver').value.trim(),
-      vehicle: document.getElementById('fVehicle').value.trim().toUpperCase(),
-      fuelType: document.getElementById('fFuelType').value,
-      station: document.getElementById('fStation').value.trim(),
-      amount: parseFloat(document.getElementById('fAmount').value) || 0,
-      qty: parseFloat(document.getElementById('fQty').value) || 0,
-      auth: document.getElementById('fAuth').value.trim(),
-      remarks: document.getElementById('fRemarks').value.trim(),
-    };
+// ══════════════════════════════════════════
+// GENERATE & PRINT
+// ══════════════════════════════════════════
+function getForm() {
+  const ci = document.getElementById('fCompany').value;
+  const f = document.getElementById('fFuel').value;
+  const amt = parseFloat(document.getElementById('fAmount').value) || 0;
+  const rate = f ? IOC[f] : 0;
+  return {
+    indentNo: 'FI-' + String(counter).padStart(4,'0'),
+    date: document.getElementById('fDate').value,
+    company: ci !== '' ? companies[parseInt(ci)].name : '',
+    driver: document.getElementById('fDriver').value,
+    vehicle: document.getElementById('fVehicle').value,
+    station: document.getElementById('fStation').value,
+    fuel: f,
+    auth: document.getElementById('fAuth').value,
+    rate: rate,
+    amount: amt,
+    litres: (rate > 0 && amt > 0) ? parseFloat((amt / rate).toFixed(2)) : 0
+  };
+}
+
+function validate(d) {
+  const err = document.getElementById('errMsg');
+  if (!d.company) { err.textContent = 'Select a company.'; return false; }
+  if (!d.driver) { err.textContent = 'Select driver.'; return false; }
+  if (!d.vehicle) { err.textContent = 'Select vehicle.'; return false; }
+  if (!d.station) { err.textContent = 'Select station.'; return false; }
+  if (!d.fuel) { err.textContent = 'Select fuel type.'; return false; }
+  if (!d.auth) { err.textContent = 'Select authorized by.'; return false; }
+  if (!d.amount) { err.textContent = 'Enter amount.'; return false; }
+  err.textContent = '';
+  return true;
+}
+
+function fmtDate(s) {
+  if (!s) return '';
+  const [y,m,d] = s.split('-');
+  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return d + '-' + mo[parseInt(m)-1] + '-' + y;
+}
+
+function buildPrint(d) {
+  const row = (l, v) => `<div class="p-row"><span class="p-lbl">${l}</span><span class="p-val">${v}</span></div>`;
+  return `
+  <div class="p-center p-big">FUEL INDENT</div>
+  <div class="p-center p-sm">${d.company}</div>
+  <div class="p-dbl"></div>
+  <div class="p-row"><span class="p-lbl">Indent No:</span><span class="p-val p-bold">${d.indentNo}</span></div>
+  <div class="p-row"><span class="p-lbl">Date:</span><span class="p-val">${fmtDate(d.date)}</span></div>
+  <div class="p-line"></div>
+  ${row('Driver:', d.driver)}
+  ${row('Vehicle:', d.vehicle)}
+  ${row('Station:', d.station)}
+  ${row('Fuel:', d.fuel)}
+  <div class="p-line"></div>
+  ${row('IOC Rate/L:', '₹' + d.rate.toFixed(2))}
+  ${row('Litres:', d.litres.toFixed(2) + ' L')}
+  <div class="p-dbl"></div>
+  ${row('AMOUNT:', '₹' + d.amount.toFixed(2))}
+  <div class="p-dbl"></div>
+  <div class="p-sign-row">
+    <div class="p-sign"><div class="p-sign-line"></div>Driver</div>
+    <div class="p-sign"><div class="p-sign-line"></div>${d.auth}</div>
+  </div>
+  <div class="p-gap"></div>
+  <div class="p-center p-sm">Indian Oil Corporation</div>
+  <div class="p-gap"></div>`;
+}
+
+function generateIndent() {
+  const d = getForm();
+  if (!validate(d)) return;
+  records.push(d);
+  localStorage.setItem('fi_records', JSON.stringify(records));
+  counter++;
+  localStorage.setItem('fi_counter', String(counter));
+  updateIndentNo();
+  renderTable();
+  document.getElementById('printArea').innerHTML = buildPrint(d);
+  setTimeout(() => window.print(), 200);
+}
+
+function resetForm() {
+  document.getElementById('fCompany').value = '';
+  document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('fAmount').value = '';
+  document.getElementById('errMsg').textContent = '';
+  onCompanyChange();
+}
+
+// ══════════════════════════════════════════
+// RECORDS TABLE
+// ══════════════════════════════════════════
+function renderTable() {
+  const body = document.getElementById('recBody');
+  document.getElementById('recCount').textContent = records.length + ' record(s)';
+  if (!records.length) {
+    body.innerHTML = '<tr><td colspan="11" class="empty">No records yet.</td></tr>';
+    return;
   }
+  body.innerHTML = records.slice().reverse().map(r => `
+    <tr>
+      <td>${r.indentNo}</td>
+      <td>${fmtDate(r.date)}</td>
+      <td>${r.company}</td>
+      <td>${r.driver}</td>
+      <td><b>${r.vehicle}</b></td>
+      <td>${r.station}</td>
+      <td>${r.fuel}</td>
+      <td>₹${r.rate.toFixed(2)}</td>
+      <td>${r.litres.toFixed(2)} L</td>
+      <td>₹${r.amount.toFixed(2)}</td>
+      <td>${r.auth}</td>
+    </tr>`).join('');
+}
 
-  function validate(d) {
-    if (!d.driver) { toast('⚠ Enter driver name', '#e63946'); return false; }
-    if (!d.vehicle) { toast('⚠ Enter vehicle number', '#e63946'); return false; }
-    if (!d.station) { toast('⚠ Enter petrol bunk / station', '#e63946'); return false; }
-    if (!d.amount) { toast('⚠ Enter amount', '#e63946'); return false; }
-    if (!d.auth) { toast('⚠ Enter authorized by', '#e63946'); return false; }
-    if (!d.date) { toast('⚠ Enter date', '#e63946'); return false; }
-    return true;
-  }
+function clearAll() {
+  if (!confirm('Delete ALL indent records? Cannot be undone.')) return;
+  records = []; counter = 1;
+  localStorage.setItem('fi_records', '[]');
+  localStorage.setItem('fi_counter', '1');
+  updateIndentNo();
+  renderTable();
+}
 
-  function buildChallanHTML(d) {
-    const fmt = (v) => new Date(v).toLocaleDateString('en-IN', {day:'2-digit',month:'short',year:'numeric'});
-    return `
-    <div class="challan-doc">
-      <div class="ch-header">
-        <div>
-          <div class="org">⛽ FUEL REQUISITION</div>
-          <div class="challan-type">VEHICLE FUEL CHALLAN</div>
-        </div>
-        <div class="ch-no">
-          <div class="label">CHALLAN NO.</div>
-          <div class="val">${d.challanNo}</div>
-        </div>
-      </div>
-      <div class="ch-stripe"></div>
-      <div class="ch-body">
-        <div class="ch-title">Fuel Issue Certificate</div>
-        <div class="ch-grid">
-          <div class="ch-field">
-            <div class="ch-label">Date</div>
-            <div class="ch-val">${fmt(d.date)}</div>
-          </div>
-          <div class="ch-field">
-            <div class="ch-label">Fuel Type</div>
-            <div class="ch-val">${d.fuelType}</div>
-          </div>
-          <div class="ch-field">
-            <div class="ch-label">Driver Name</div>
-            <div class="ch-val">${d.driver}</div>
-          </div>
-          <div class="ch-field">
-            <div class="ch-label">Vehicle Number</div>
-            <div class="ch-val" style="font-family:'Share Tech Mono',monospace;letter-spacing:1px">${d.vehicle}</div>
-          </div>
-          <div class="ch-field" style="grid-column:1/-1">
-            <div class="ch-label">Petrol Bunk / Station</div>
-            <div class="ch-val">${d.station}</div>
-          </div>
-          ${d.remarks ? `<div class="ch-field" style="grid-column:1/-1"><div class="ch-label">Remarks</div><div class="ch-val">${d.remarks}</div></div>` : ''}
-        </div>
-        <div class="ch-amount">
-          <div>
-            <div class="a-label">Quantity Filled</div>
-            <div style="color:#fff;font-family:'Share Tech Mono',monospace;font-size:1.1rem">${d.qty > 0 ? d.qty + ' L' : '— L'}</div>
-          </div>
-          <div style="text-align:right">
-            <div class="a-label">Total Amount</div>
-            <div class="a-val">₹${d.amount.toLocaleString('en-IN', {minimumFractionDigits:2})}</div>
-          </div>
-        </div>
-        <div class="ch-footer">
-          <div>
-            <div class="ch-sign">Driver's Signature</div>
-          </div>
-          <div style="text-align:right">
-            <div class="ch-sign">Authorized By: <strong style="color:#111">${d.auth}</strong></div>
-          </div>
-        </div>
-      </div>
+// ══════════════════════════════════════════
+// EXPORT EXCEL
+// ══════════════════════════════════════════
+function exportExcel() {
+  if (!records.length) { alert('No records to export.'); return; }
+  const rows = [
+    ['Indent No','Date','Company','Driver','Vehicle','Station','Fuel','Rate/L (₹)','Litres','Amount (₹)','Auth By'],
+    ...records.map(r => [r.indentNo,r.date,r.company,r.driver,r.vehicle,r.station,r.fuel,r.rate,r.litres,r.amount,r.auth])
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [12,12,18,18,16,24,8,10,8,12,18].map(w=>({wch:w}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Fuel Indents');
+  XLSX.writeFile(wb, 'FuelIndents_' + new Date().toISOString().slice(0,10) + '.xlsx');
+}
+
+// ══════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════
+function renderSettings() {
+  const cont = document.getElementById('settingsContainer');
+  cont.innerHTML = '';
+  companies.forEach((c, ci) => {
+    const div = document.createElement('div');
+    div.className = 'settings-card';
+    div.innerHTML = `
+      <h3>Company ${ci + 1}</h3>
+      <input class="co-name-input" id="co_name_${ci}" value="${esc(c.name)}" placeholder="Company Name">
+      ${buildListEditor(ci, 'drivers', 'Drivers', c.drivers)}
+      ${buildListEditor(ci, 'vehicles', 'Vehicle Numbers', c.vehicles)}
+      ${buildListEditor(ci, 'stations', 'Petrol Bunks / Stations', c.stations)}
+      ${buildListEditor(ci, 'authorizers', 'Authorized By', c.authorizers)}
+    `;
+    cont.appendChild(div);
+  });
+}
+
+function buildListEditor(ci, key, label, items) {
+  const rows = items.map((v, ii) =>
+    `<div class="list-item" id="li_${ci}_${key}_${ii}">
+      <input type="text" value="${esc(v)}" id="li_val_${ci}_${key}_${ii}">
+      <button onclick="removeItem(${ci},'${key}',${ii})">✕</button>
+    </div>`
+  ).join('');
+  return `
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:bold;text-transform:uppercase;color:#555;margin-bottom:5px;">${label}</div>
+      <div class="list-editor" id="list_${ci}_${key}">${rows}</div>
+      <button class="add-btn" onclick="addItem(${ci},'${key}')">+ Add ${label.slice(0,-1)}</button>
     </div>`;
-  }
+}
 
-  function generateChallan() {
-    const d = getFormData();
-    if (!validate(d)) return;
+function esc(s) { return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
-    // Render preview
-    document.getElementById('previewArea').className = 'preview-area';
-    document.getElementById('previewArea').innerHTML = buildChallanHTML(d);
-    document.getElementById('printRow').style.display = 'flex';
+function addItem(ci, key) {
+  companies[ci][key].push('');
+  renderSettings();
+}
 
-    // Save record
-    records.push(d);
-    localStorage.setItem('fuelChallans', JSON.stringify(records));
+function removeItem(ci, key, ii) {
+  companies[ci][key].splice(ii, 1);
+  renderSettings();
+}
 
-    // Increment counter
-    challanCounter++;
-    localStorage.setItem('challanCounter', String(challanCounter));
-    updateChallanNo();
-
-    renderTable();
-    toast('✅ Challan ' + d.challanNo + ' generated!');
-
-    // Auto-print after short delay
-    setTimeout(() => window.print(), 400);
-  }
-
-  function renderTable() {
-    const body = document.getElementById('recordsBody');
-    document.getElementById('recordCount').textContent = records.length + ' record' + (records.length !== 1 ? 's' : '');
-    if (records.length === 0) {
-      body.innerHTML = '<tr><td colspan="10"><div class="empty-state"><span class="icon">📭</span><p>No challans generated yet</p></div></td></tr>';
-      return;
-    }
-    body.innerHTML = records.slice().reverse().map(r => `
-      <tr>
-        <td>${r.challanNo}</td>
-        <td>${r.date}</td>
-        <td>${r.driver}</td>
-        <td><span class="badge">${r.vehicle}</span></td>
-        <td>${r.station}</td>
-        <td>${r.fuelType}</td>
-        <td>${r.qty > 0 ? r.qty : '—'}</td>
-        <td>₹${r.amount.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
-        <td>${r.auth}</td>
-        <td>${r.remarks || '—'}</td>
-      </tr>`).join('');
-  }
-
-  function exportExcel() {
-    if (records.length === 0) { toast('⚠ No records to export', '#e63946'); return; }
-    const ws_data = [
-      ['Challan No.', 'Date', 'Driver Name', 'Vehicle No.', 'Fuel Type', 'Station', 'Quantity (L)', 'Amount (₹)', 'Authorized By', 'Remarks'],
-      ...records.map(r => [r.challanNo, r.date, r.driver, r.vehicle, r.fuelType, r.station, r.qty || '', r.amount, r.auth, r.remarks || ''])
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    // Column widths
-    ws['!cols'] = [12,12,20,16,10,28,14,14,22,24].map(w => ({wch:w}));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Fuel Challans');
-    XLSX.writeFile(wb, 'Fuel_Challans_' + new Date().toISOString().slice(0,10) + '.xlsx');
-    toast('📥 Excel exported successfully!');
-  }
-
-  function resetForm() {
-    ['fDriver','fVehicle','fStation','fAmount','fQty','fAuth','fRemarks'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('fFuelType').value = 'Petrol';
-    document.getElementById('fDate').value = new Date().toISOString().split('T')[0];
-  }
-
-  function clearAll() {
-    if (!confirm('Clear ALL challan records? This cannot be undone.')) return;
-    records = [];
-    challanCounter = 1;
-    localStorage.setItem('fuelChallans', '[]');
-    localStorage.setItem('challanCounter', '1');
-    updateChallanNo();
-    renderTable();
-    toast('🗑 All records cleared', '#e63946');
-  }
+function saveSettings() {
+  // Read all current values from inputs
+  companies.forEach((c, ci) => {
+    c.name = document.getElementById('co_name_' + ci).value.trim() || c.name;
+    ['drivers','vehicles','stations','authorizers'].forEach(key => {
+      const container = document.getElementById('list_' + ci + '_' + key);
+      const inputs = container.querySelectorAll('input[type="text"]');
+      c[key] = Array.from(inputs).map(inp => inp.value.trim()).filter(v => v !== '');
+    });
+  });
+  localStorage.setItem('fi_companies', JSON.stringify(companies));
+  populateCompanies();
+  document.getElementById('settingsMsg').textContent = '✓ Settings saved!';
+  setTimeout(() => document.getElementById('settingsMsg').textContent = '', 2500);
+  renderSettings();
+}
 </script>
 </body>
 </html>
