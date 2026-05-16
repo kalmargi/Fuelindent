@@ -442,18 +442,15 @@ function getForm() {
   const ci  = document.getElementById('fCompany').value;
   const f   = document.getElementById('fFuel').value;
   const amt = parseFloat(document.getElementById('fAmount').value) || 0;
-  const rate= f ? (IOC[f] || 0) : 0;
   return {
-    indentNo: 'FI-' + String(counter).padStart(4,'0'),
+    indentNo: String(counter).padStart(4,'0'),
     date    : todayISO(),
     company : ci !== '' ? companies[parseInt(ci)].name : '',
     driver  : document.getElementById('fDriver').value,
     vehicle : document.getElementById('fVehicle').value,
     station : document.getElementById('fStation').value,
     fuel    : f,
-    auth    : document.getElementById('fAuth').value,
-    rate, amt,
-    litres  : (rate && amt) ? parseFloat((amt/rate).toFixed(2)) : 0
+    auth    : document.getElementById('fAuth').value
   };
 }
 
