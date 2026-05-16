@@ -465,7 +465,6 @@ function validate(d) {
     [!d.fuel,    'Select fuel type.'],
     [!d.auth,    'Select authorized by.'],
     [!d.amt,     'Enter amount.'],
-    [!d.rate,    'Rate not available for selected fuel.'],
   ];
   for (const [fail, msg] of checks) { if (fail) { e.textContent = msg; return false; } }
   e.textContent = ''; return true;
