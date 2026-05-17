@@ -364,7 +364,7 @@ let dbOK = false;
 // ─────────────────────────────────────────
 async function onDbReady() {
   dbOK = true;
-  setStatus('ok', '✅ Connected to cloud database. Records sync across all devices.');
+  setStatus('ok', '');
 
   // Load counter
   counter = await window._db.getCounter();
