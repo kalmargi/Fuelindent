@@ -27,16 +27,14 @@ import { getFirestore, collection, doc,
          setDoc, onSnapshot, orderBy,
          query, getDoc }                            from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-// ██ PASTE YOUR FIREBASE CONFIG HERE ██
 const firebaseConfig = {
-  apiKey:            "PASTE_YOUR_apiKey_HERE",
-  authDomain:        "PASTE_YOUR_authDomain_HERE",
-  projectId:         "PASTE_YOUR_projectId_HERE",
-  storageBucket:     "PASTE_YOUR_storageBucket_HERE",
-  messagingSenderId: "PASTE_YOUR_messagingSenderId_HERE",
-  appId:             "PASTE_YOUR_appId_HERE"
+  apiKey: "AIzaSyDuIE7KdpAEwd8Cj1Eo-sHlTLHE5mtj7eg",
+  authDomain: "fuelindent.firebaseapp.com",
+  projectId: "fuelindent",
+  storageBucket: "fuelindent.firebasestorage.app",
+  messagingSenderId: "590786986084",
+  appId: "1:590786986084:web:2d75e1de12e211fcd69f71"
 };
-// ██████████████████████████████████████
 
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
