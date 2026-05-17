@@ -6,19 +6,6 @@
 <title>Fuel Indent</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<!--
-  ████████████████████████████████████████████████████
-  STEP 1 — Create a free Firebase project:
-    1. Go to https://console.firebase.google.com
-    2. Click "Add project" → name it (e.g. "fuel-indent") → Create
-    3. In left menu → Build → Firestore Database → Create database
-       → Start in TEST MODE → choose a region → Enable
-    4. In left menu → Project Settings (gear icon) → Your apps
-       → Click </> (Web) → Register app → Copy the firebaseConfig object
-    5. PASTE your firebaseConfig values into the section below
-  ████████████████████████████████████████████████████
--->
-
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp }                            from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
@@ -28,12 +15,12 @@ import { getFirestore, collection, doc,
          query, getDoc }                            from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDuIE7KdpAEwd8Cj1Eo-sHlTLHE5mtj7eg",
-  authDomain: "fuelindent.firebaseapp.com",
-  projectId: "fuelindent",
-  storageBucket: "fuelindent.firebasestorage.app",
-  messagingSenderId: "590786986084",
-  appId: "1:590786986084:web:2d75e1de12e211fcd69f71"
+  apiKey: "AIzaSyBlQdjirQmA0oDBoALyeaKswMj2pfSdGYI",
+  authDomain: "fuel-indent.firebaseapp.com",
+  projectId: "fuel-indent",
+  storageBucket: "fuel-indent.firebasestorage.app",
+  messagingSenderId: "707992681541",
+  appId: "1:707992681541:web:b29bb30d4bfe2e831cf72c"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -615,9 +602,6 @@ function buildPrint(d) {
   ${row('Vehicle:', d.vehicle)}
   ${row('Station:', d.station)}
   ${row('Fuel:',    d.fuel)}
-  <div class="p-line"></div>
-  ${row('IOC Rate/L:', '&#x20B9;' + d.rate.toFixed(2))}
-  ${row('Litres:',     d.litres.toFixed(2) + ' L')}
   <div class="p-dbl"></div>
   ${row('AMOUNT:', '&#x20B9;' + d.amount.toFixed(2))}
   <div class="p-dbl"></div>
