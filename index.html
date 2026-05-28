@@ -202,8 +202,9 @@ tr:hover td { background: #f9f9f9; }
     gap: 3px;
     font-size: 11pt;
     line-height: 1.4;
+    flex-wrap: wrap;
   }
-  .p-val { text-align: right; font-weight: bold; flex-shrink: 0; }
+  .p-val { text-align: right; font-weight: bold; word-break: break-word;f }
   .p-gap { height: 5mm; }
 }
 </style>
@@ -668,7 +669,12 @@ function fmtDate(s) {
 }
 
 function buildPrint(d) {
-  const row = (l, v) => `<div class="p-row"><span>${l}</span><span class="p-val">${v}</span></div>`;
+  const row = (l, v) => `
+    <div style="margin:4px 0 6px 0; line-height:1.4;">
+      <div style="font-size:9pt;">${l}</div>
+      <div style="font-weight:bold; font-size:12pt; word-break:break-word; white-space:normal;">${v}</div>
+    </div>`;
+  const rowInline = (l, v) => `<div class="p-row"><span>${l}</span><span class="p-val">${v}</span></div>`;
   return `
   <div class="p-center p-big">FUEL INDENT</div>
   <div class="p-center p-sm">${d.company}</div>
