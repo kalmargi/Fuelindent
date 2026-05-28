@@ -77,7 +77,34 @@ window.dispatchEvent(new Event('dbReady'));
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Arial, sans-serif; font-size: 13px; background: #e8e8e8; padding: 12px; }
-
+/* LOGIN SCREEN */
+#loginScreen {
+  position: fixed; inset: 0; background: #222;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999;
+}
+#loginScreen.hidden { display: none; }
+.login-box {
+  background: #fff; border: 1px solid #aaa;
+  padding: 32px 28px; width: 300px; max-width: 92%;
+  text-align: center;
+}
+.login-box h2 { font-size: 15px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+.login-box p  { font-size: 11px; color: #777; margin-bottom: 20px; }
+.login-box input[type="password"] {
+  width: 100%; padding: 9px 10px; font-size: 15px;
+  border: 1px solid #bbb; margin-bottom: 8px;
+  letter-spacing: 6px; text-align: center;
+}
+.login-box input[type="password"]:focus { outline: 2px solid #333; }
+.login-box button {
+  width: 100%; padding: 10px; font-size: 14px;
+  font-weight: bold; background: #222; color: #fff;
+  border: none; cursor: pointer;
+}
+.login-box button:hover { background: #444; }
+.login-box .lerr { color: #c00; font-size: 11px; min-height: 16px; margin-bottom: 6px; }
+ 
 .tabs { display: flex; gap: 4px; margin-bottom: 12px; }
 .tab { padding: 7px 18px; border: 1px solid #999; background: #ddd; cursor: pointer; font-size: 13px; font-weight: bold; user-select: none; }
 .tab.active { background: #fff; border-bottom: 1px solid #fff; position: relative; top: 1px; }
@@ -183,6 +210,17 @@ tr:hover td { background: #f9f9f9; }
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>⛽ Fuel Indent</h2>
+    <input type="password" id="loginPw" placeholder="Enter password" maxlength="4"
+           onkeydown="if(event.key==='Enter') doLogin()">
+    <div class="lerr" id="loginErr"></div>
+    <button onclick="doLogin()">Login</button>
+  </div>
+</div>
+         
 <!-- PASSWORD MODAL -->
 <div class="modal-bg" id="pwModal">
   <div class="modal">
@@ -346,7 +384,8 @@ tr:hover td { background: #f9f9f9; }
 // ─────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────
-const ADMIN_PASS = '1234';
+const ADMIN_PASS = '0820';
+const LOGIN_PASS = '321'
 const FALLBACK   = { Petrol: 103.07, Diesel: 90.99, CNG: null };
 const PROXY      = 'https://api.allorigins.win/get?url=';
 const URL_P      = encodeURIComponent('https://www.goodreturns.in/petrol-price-in-mysore.html');
@@ -360,11 +399,44 @@ let rateReady  = false;
 let records    = [];          // kept in sync by Firestore listener
 let counter    = 1;
 let companies  = [
-  { name:'Company A', drivers:['Driver 1','Driver 2'], vehicles:['KA-01-AA-0001','KA-01-AA-0002'], stations:['Indian Oil, MG Road','Indian Oil, Hebbal'],        authorizers:['Manager A'] },
-  { name:'Company B', drivers:['Driver 3','Driver 4'], vehicles:['KA-02-BB-0001','KA-02-BB-0002'], stations:['Indian Oil, Whitefield','Indian Oil, Koramangala'], authorizers:['Manager B'] }
-];
+         {
+    name: 'Deepthi Traders - +91 9980933973',
+    drivers: ['VASU'],
+    vehicles: ['KA20D 2988','KA20AA 4926','KA20MB 5866 [BRV]'],
+    stations: ['ANKUSH FUELS - SBRKTE','NANDI FUELS - YTNTI','ANIKA FUELS - HNSMKI','MAHALASA FUELS - BDKLKTE'],
+    authorizers: ['SS','CH','RDN']
+  },
+  {
+    name: 'Kalmargi Hardwares - +91 9980933973',
+    drivers: ['PRAMOD','SACHIN','PRABHAKARA','EESHWARA','KESHAVA','NARAYANA','RAVINDRA'],
+    vehicles: ['KA20AC 1177','KA20AA 9785','KA20AB 1110','KA20AA 4108','KA20AA 4828','KA20AB 4234','KA20AB 7926','KA20D 6864','KA20N 8695 [OMNI]','KA20MD 6394 [WAGNR]','KA20HA 9032 [ROYAL]','KA20ER 9010 [SCOOTY]','KA20EG 9615 [GLAMOR]','KA20ER 8952 [SPLENDOR]'],
+    stations: ['ANKUSH FUELS - SBRKTE','NANDI FUELS - YTNTI','ANIKA FUELS - HNSMKI','MAHALASA FUELS - BDKLKTE'],
+    authorizers: ['SS','CH','RDN']
+  }
+  ];
 let dbOK = false;
 
+         // ─────────────────────────────────────────
+// LOGIN
+// ─────────────────────────────────────────
+function doLogin() {
+  const val = document.getElementById('loginPw').value;
+  if (val === LOGIN_PASS) {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('loginPw').value = '';
+    // focus first field after login
+    setTimeout(() => document.getElementById('fCompany').focus(), 100);
+  } else {
+    document.getElementById('loginErr').textContent = 'Incorrect password.';
+    document.getElementById('loginPw').value = '';
+    document.getElementById('loginPw').focus();
+  }
+}
+// Show login on load
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('loginPw').focus(), 200);
+});
+         
 // ─────────────────────────────────────────
 // WAIT FOR FIREBASE THEN INIT
 // ─────────────────────────────────────────
