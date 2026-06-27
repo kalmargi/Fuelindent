@@ -145,7 +145,7 @@ tr:hover td { background: #f9f9f9; }
 <div class="tabs">
   <div class="tab active" onclick="showTab('indent')">New Indent</div>
   <div class="tab"        onclick="showTab('records')">Records</div>
-  <div class="tab"        onclick="requireAdmin('settings')">Settings 🔒</div>
+
 </div>
 
 <!-- ══ INDENT FORM ══ -->
@@ -252,16 +252,7 @@ tr:hover td { background: #f9f9f9; }
   </div>
 </div>
 
-<!-- ══ SETTINGS ══ -->
-<div id="page-settings" class="page">
-  <div id="settingsContainer"></div>
-  <div style="max-width:540px;margin:0 auto;">
-    <div class="btn-row">
-      <button class="btn-dark" onclick="saveSettings()">Save Settings</button>
-    </div>
-    <div id="settingsMsg" style="color:green;font-size:12px;margin-top:6px;min-height:16px;"></div>
-  </div>
-</div>
+
 
 <!-- PRINT AREA -->
 <div id="printArea"></div>
@@ -271,10 +262,12 @@ tr:hover td { background: #f9f9f9; }
 const ADMIN_PASS = '0820';
 const LOGIN_PASS = '321';
 
-// ── STATE (localStorage) ──
-let records  = JSON.parse(localStorage.getItem('fi_records')  || '[]');
-let counter  = parseInt(localStorage.getItem('fi_counter')    || '1');
-let companies = JSON.parse(localStorage.getItem('fi_companies') || 'null') || [
+// ── STATE ──
+let records  = JSON.parse(localStorage.getItem('fi_records') || '[]');
+let counter  = parseInt(localStorage.getItem('fi_counter')   || '1');
+
+// Company details — always hardcoded, never overridden by localStorage
+const companies = [
   {
     name: 'Deepthi Traders',
     drivers: ['VASU'],
@@ -292,9 +285,8 @@ let companies = JSON.parse(localStorage.getItem('fi_companies') || 'null') || [
 ];
 
 function save() {
-  localStorage.setItem('fi_records',   JSON.stringify(records));
-  localStorage.setItem('fi_counter',   String(counter));
-  localStorage.setItem('fi_companies', JSON.stringify(companies));
+  localStorage.setItem('fi_records', JSON.stringify(records));
+  localStorage.setItem('fi_counter', String(counter));
 }
 
 // ── LOGIN ──
@@ -500,65 +492,15 @@ function exportExcel() {
   XLSX.writeFile(wb, 'FuelIndents_' + todayISO() + '.xlsx');
 }
 
-// ── SETTINGS ──
-function renderSettings() {
-  const cont = document.getElementById('settingsContainer');
-  if (!document.getElementById('page-settings').classList.contains('active')) return;
-  cont.innerHTML = '';
-  companies.forEach((c,ci) => {
-    const div = document.createElement('div');
-    div.className = 'settings-card';
-    div.innerHTML = `
-      <h3>Company ${ci+1}</h3>
-      <input class="co-name-input" id="co_name_${ci}" value="${esc(c.name)}" placeholder="Company Name">
-      ${mkEditor(ci,'drivers',    'Drivers')}
-      ${mkEditor(ci,'vehicles',   'Vehicle Numbers')}
-      ${mkEditor(ci,'stations',   'Petrol Bunks / Stations')}
-      ${mkEditor(ci,'authorizers','Authorized By')}`;
-    cont.appendChild(div);
-  });
-}
-function mkEditor(ci, key, label) {
-  const rows = (companies[ci][key]||[]).map((v,ii) => `
-    <div class="list-item">
-      <input type="text" value="${esc(v)}" id="li_${ci}_${key}_${ii}">
-      <button onclick="removeItem(${ci},'${key}',${ii})">✕</button>
-    </div>`).join('');
-  return `
-    <div style="margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:bold;text-transform:uppercase;color:#555;margin-bottom:4px;">${label}</div>
-      <div class="list-editor" id="list_${ci}_${key}">${rows}</div>
-      <button class="add-btn" onclick="addItem(${ci},'${key}')">+ Add</button>
-    </div>`;
-}
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
-function addItem(ci,key)       { companies[ci][key].push(''); renderSettings(); }
-function removeItem(ci,key,ii) { companies[ci][key].splice(ii,1); renderSettings(); }
 
-function saveSettings() {
-  companies.forEach((c,ci) => {
-    c.name = (document.getElementById('co_name_'+ci).value||'').trim() || c.name;
-    ['drivers','vehicles','stations','authorizers'].forEach(key => {
-      c[key] = Array.from(document.getElementById('list_'+ci+'_'+key)
-        .querySelectorAll('input[type="text"]'))
-        .map(i=>i.value.trim()).filter(v=>v!=='');
-    });
-  });
-  save();
-  populateCompanies();
-  document.getElementById('settingsMsg').textContent = '✓ Settings saved.';
-  setTimeout(()=>document.getElementById('settingsMsg').textContent='', 3000);
-  renderSettings();
-}
 
 // ── TABS ──
 function showTab(name) {
-  const names = ['indent','records','settings'];
+  const names = ['indent','records'];
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===name));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  if (name === 'records')  renderTable();
-  if (name === 'settings') renderSettings();
+  if (name === 'records') renderTable();
 }
 
 // ── ADMIN MODAL ──
@@ -587,9 +529,7 @@ function pwSubmit() {
   document.getElementById('pwModal').classList.remove('show');
   const target = _pwTarget;
   _pwTarget = null;
-  if (target === 'settings') {
-    showTab('settings');
-  } else if (target === 'clearRecords') {
+  if (target === 'clearRecords') {
     if (confirm('Delete ALL indent records permanently? This cannot be undone.')) {
       doClearRecords();
     }
