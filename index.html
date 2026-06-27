@@ -318,14 +318,14 @@ let records   = [];
 let counter   = 1;
 let companies = [
   {
-    name: 'Deepthi Traders',
+    name: 'Deepthi Traders - +91 9980933973',
     drivers: ['VASU'],
     vehicles: ['KA20D 2988','KA20AA 4926','KA20MB 5866 [BRV]'],
     stations: ['ANKUSH FUELS - SBRKTE','NANDI FUELS - YTNTI','ANIKA FUELS - HNSMKI','MAHALASA FUELS - BDKLKTE'],
     authorizers: ['SS','CH','RDN']
   },
   {
-    name: 'Kalmargi Hardwares',
+    name: 'Kalmargi Hardwares - +91 9980933973',
     drivers: ['PRAMOD','SACHIN','PRABHAKARA','EESHWARA','KESHAVA','NARAYANA','RAVINDRA'],
     vehicles: ['KA20AC 1177','KA20AA 9785','KA20AB 1110','KA20AA 4108','KA20AA 4828','KA20AB 4234','KA20AB 7926','KA20D 6864','KA20N 8695 [OMNI]','KA20MD 6394 [WAGNR]','KA20HA 9032 [ROYAL]','KA20ER 9010 [SCOOTY]','KA20EG 9615 [GLAMOR]','KA20ER 8952 [SPLENDOR]'],
     stations: ['ANKUSH FUELS - SBRKTE','NANDI FUELS - YTNTI','ANIKA FUELS - HNSMKI','MAHALASA FUELS - BDKLKTE'],
@@ -360,7 +360,12 @@ async function onDbReady() {
   setStatus('ok', '✅ Connected — records sync across all devices.');
   counter = await window._db.getCounter();
   updateIndentNo();
-  window._db.listenRecords(rows => { records = rows; renderTable(); });
+  window._db.listenRecords(rows => {
+    // Firestore is source of truth — replace local records fully
+    records = rows;
+    updateIndentNo();
+    renderTable();
+  });
   window._db.listenSettings(data => {
     if (data.companies && data.companies.length) {
       companies = data.companies;
@@ -502,15 +507,18 @@ async function generateIndent() {
   try {
     if (dbOK) {
       await window._db.addRecord(d);
-      counter++;
-      await window._db.saveCounter(counter);
-    } else {
-      records.push(d);
-      counter++;
-      renderTable();
+      await window._db.saveCounter(counter + 1);
     }
+    // Always update locally so Records tab shows it immediately
+    records.push({ ...d });
+    counter++;
     updateIndentNo();
-  } catch(e) { console.error('Save failed', e); }
+    renderTable();
+  } catch(e) {
+    console.error('Save failed', e);
+    alert('Error saving record: ' + e.message);
+    return;
+  }
   document.getElementById('printArea').innerHTML = buildPrint(d);
   setTimeout(() => window.print(), 200);
 }
