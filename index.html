@@ -8,68 +8,33 @@
 
 <!-- Firebase SDK -->
 <script type="module">
-import { initializeApp }                            from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
 import { getFirestore, collection, doc,
          addDoc, getDocs, deleteDoc,
          setDoc, onSnapshot, orderBy,
-         query, getDoc }                            from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+         query, getDoc }   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBlQdjirQmA0oDBoALyeaKswMj2pfSdGYI",
-  authDomain: "fuel-indent.firebaseapp.com",
-  projectId: "fuel-indent",
-  storageBucket: "fuel-indent.firebasestorage.app",
+  apiKey:            "AIzaSyBlQdjirQmA0oDBoALyeaKswMj2pfSdGYI",
+  authDomain:        "fuel-indent.firebaseapp.com",
+  projectId:         "fuel-indent",
+  storageBucket:     "fuel-indent.firebasestorage.app",
   messagingSenderId: "707992681541",
-  appId: "1:707992681541:web:b29bb30d4bfe2e831cf72c"
+  appId:             "1:707992681541:web:b29bb30d4bfe2e831cf72c"
 };
 
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-// ── Collections ──
-const RECORDS_COL  = "fi_records";
-const SETTINGS_DOC = "fi_settings/data";
-const COUNTER_DOC  = "fi_counter/data";
-
-// ── Expose DB helpers to window so non-module code can call them ──
 window._db = {
-  // Save a new indent record
-  async addRecord(data) {
-    await addDoc(collection(db, RECORDS_COL), data);
-  },
-  // Clear all records
-  async clearRecords() {
-    const snap = await getDocs(collection(db, RECORDS_COL));
-    const dels = snap.docs.map(d => deleteDoc(d.ref));
-    await Promise.all(dels);
-  },
-  // Save settings (companies array + counter)
-  async saveSettings(companies) {
-    await setDoc(doc(db, "fi_settings", "data"), { companies });
-  },
-  async saveCounter(n) {
-    await setDoc(doc(db, "fi_counter", "data"), { value: n });
-  },
-  async getCounter() {
-    const snap = await getDoc(doc(db, "fi_counter", "data"));
-    return snap.exists() ? (snap.data().value || 1) : 1;
-  },
-  // Real-time listener for records
-  listenRecords(callback) {
-    const q = query(collection(db, RECORDS_COL), orderBy("ts", "asc"));
-    return onSnapshot(q, snap => {
-      const rows = snap.docs.map(d => ({ _id: d.id, ...d.data() }));
-      callback(rows);
-    });
-  },
-  // Real-time listener for settings
-  listenSettings(callback) {
-    return onSnapshot(doc(db, "fi_settings", "data"), snap => {
-      if (snap.exists()) callback(snap.data());
-    });
-  }
+  async addRecord(data)      { await addDoc(collection(db, 'fi_records'), data); },
+  async clearRecords()       { const s = await getDocs(collection(db,'fi_records')); await Promise.all(s.docs.map(d=>deleteDoc(d.ref))); },
+  async saveSettings(co)     { await setDoc(doc(db,'fi_settings','data'), { companies: co }); },
+  async saveCounter(n)       { await setDoc(doc(db,'fi_counter','data'), { value: n }); },
+  async getCounter()         { const s = await getDoc(doc(db,'fi_counter','data')); return s.exists() ? (s.data().value||1) : 1; },
+  listenRecords(cb)          { return onSnapshot(query(collection(db,'fi_records'), orderBy('ts','asc')), s => cb(s.docs.map(d=>({_id:d.id,...d.data()})))); },
+  listenSettings(cb)         { return onSnapshot(doc(db,'fi_settings','data'), s => { if(s.exists()) cb(s.data()); }); }
 };
-
 window._dbReady = true;
 window.dispatchEvent(new Event('dbReady'));
 </script>
@@ -77,75 +42,59 @@ window.dispatchEvent(new Event('dbReady'));
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Arial, sans-serif; font-size: 13px; background: #e8e8e8; padding: 12px; }
-/* LOGIN SCREEN */
-#loginScreen {
-  position: fixed; inset: 0; background: #222;
-  display: flex; align-items: center; justify-content: center;
-  z-index: 999;
-}
+
+/* LOGIN */
+#loginScreen { position: fixed; inset: 0; background: #222; display: flex; align-items: center; justify-content: center; z-index: 999; }
 #loginScreen.hidden { display: none; }
-.login-box {
-  background: #fff; border: 1px solid #aaa;
-  padding: 32px 28px; width: 300px; max-width: 92%;
-  text-align: center;
-}
+.login-box { background: #fff; border: 1px solid #aaa; padding: 32px 28px; width: 300px; max-width: 92%; text-align: center; }
 .login-box h2 { font-size: 15px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
 .login-box p  { font-size: 11px; color: #777; margin-bottom: 20px; }
-.login-box input[type="password"] {
-  width: 100%; padding: 9px 10px; font-size: 15px;
-  border: 1px solid #bbb; margin-bottom: 8px;
-  letter-spacing: 6px; text-align: center;
-}
+.login-box input[type="password"] { width: 100%; padding: 9px 10px; font-size: 15px; border: 1px solid #bbb; margin-bottom: 8px; letter-spacing: 6px; text-align: center; }
 .login-box input[type="password"]:focus { outline: 2px solid #333; }
-.login-box button {
-  width: 100%; padding: 10px; font-size: 14px;
-  font-weight: bold; background: #222; color: #fff;
-  border: none; cursor: pointer;
-}
+.login-box button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #222; color: #fff; border: none; cursor: pointer; }
 .login-box button:hover { background: #444; }
 .login-box .lerr { color: #c00; font-size: 11px; min-height: 16px; margin-bottom: 6px; }
- 
+
+/* TABS */
 .tabs { display: flex; gap: 4px; margin-bottom: 12px; }
 .tab { padding: 7px 18px; border: 1px solid #999; background: #ddd; cursor: pointer; font-size: 13px; font-weight: bold; user-select: none; }
 .tab.active { background: #fff; border-bottom: 1px solid #fff; position: relative; top: 1px; }
 .page { display: none; }
 .page.active { display: block; }
 
+/* CARD */
 .card { background: #fff; border: 1px solid #bbb; padding: 14px; max-width: 480px; margin: 0 auto 14px auto; }
 .card h3 { font-size: 13px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 6px; margin-bottom: 10px; text-transform: uppercase; }
 
+/* FIELDS */
 .field { margin-bottom: 9px; }
 .field label { display: block; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #555; margin-bottom: 3px; }
-.field select, .field input[type="number"] { width: 100%; padding: 6px 8px; font-size: 13px; border: 1px solid #bbb; }
-.field select:focus, .field input:focus { outline: 2px solid #333; }
+.field select { width: 100%; padding: 6px 8px; font-size: 13px; border: 1px solid #bbb; }
+.field select:focus { outline: 2px solid #333; }
 .row2 { display: flex; gap: 8px; }
 .row2 .field { flex: 1; }
-
 .auto-val { background: #f4f4f4; border: 1px solid #ccc; padding: 6px 8px; font-size: 13px; font-weight: bold; min-height: 30px; color: #111; }
-.auto-val.muted { font-weight: normal; color: #888; font-style: italic; }
-.auto-val.err-val { font-weight: normal; color: #b00; font-size: 11px; }
 
-.status-bar { max-width: 480px; margin: 0 auto 8px auto; background: #fff3cd; border: 1px solid #ffc107; padding: 6px 10px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.status-bar.ok { background: #d4edda; border-color: #28a745; }
+/* STATUS */
+.status-bar { max-width: 480px; margin: 0 auto 8px auto; padding: 6px 10px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff3cd; border: 1px solid #ffc107; }
+.status-bar.ok  { background: #d4edda; border-color: #28a745; }
 .status-bar.err { background: #f8d7da; border-color: #dc3545; }
-
-.rate-bar { max-width: 480px; margin: 0 auto 10px auto; background: #fff; border: 1px solid #bbb; padding: 7px 12px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-.rate-refresh { font-size: 11px; color: #1a6630; cursor: pointer; text-decoration: underline; white-space: nowrap; }
 
 .err { color: #c00; font-size: 11px; margin-top: 5px; min-height: 16px; }
 
+/* BUTTONS */
 .btn-row { display: flex; gap: 8px; margin-top: 10px; }
 button { flex: 1; padding: 8px; font-size: 13px; font-weight: bold; border: 1px solid #555; background: #fff; cursor: pointer; }
 button:hover { background: #eee; }
-.btn-dark { background: #222; color: #fff; border-color: #222; }
-.btn-dark:hover { background: #444; }
+.btn-dark  { background: #222; color: #fff; border-color: #222; }
+.btn-dark:hover  { background: #444; }
 .btn-green { background: #1a6630; color: #fff; border-color: #1a6630; }
 .btn-green:hover { background: #0f4a22; }
-.btn-red { background: #a00; color: #fff; border-color: #a00; }
-.btn-red:hover { background: #c00; }
+.btn-red   { background: #a00; color: #fff; border-color: #a00; }
+.btn-red:hover   { background: #c00; }
 
-/* records */
-.records-card { background: #fff; border: 1px solid #bbb; padding: 14px; max-width: 1100px; margin: 0 auto; }
+/* RECORDS */
+.records-card { background: #fff; border: 1px solid #bbb; padding: 14px; max-width: 1000px; margin: 0 auto; }
 .rec-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
 .rec-hdr h3 { font-size: 13px; font-weight: bold; text-transform: uppercase; }
 .tbl-wrap { overflow-x: auto; }
@@ -155,7 +104,7 @@ td { padding: 5px 8px; border-bottom: 1px solid #e0e0e0; white-space: nowrap; }
 tr:hover td { background: #f9f9f9; }
 .empty { text-align: center; padding: 20px; color: #999; }
 
-/* settings */
+/* SETTINGS */
 .settings-card { background: #fff; border: 1px solid #bbb; padding: 14px; max-width: 540px; margin: 0 auto 14px auto; }
 .settings-card h3 { font-size: 13px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 6px; margin-bottom: 10px; text-transform: uppercase; }
 .list-editor { display: flex; flex-direction: column; gap: 5px; margin-bottom: 6px; }
@@ -167,7 +116,7 @@ tr:hover td { background: #f9f9f9; }
 .add-btn:hover { background: #ddd; }
 .co-name-input { width: 100%; padding: 5px 7px; font-size: 13px; border: 1px solid #bbb; margin-bottom: 8px; font-weight: bold; }
 
-/* modal */
+/* MODAL */
 .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
 .modal-bg.show { display: flex; }
 .modal { background: #fff; border: 1px solid #aaa; padding: 22px 24px; width: 280px; max-width: 90%; }
@@ -191,38 +140,33 @@ tr:hover td { background: #f9f9f9; }
   }
   @page { size: 58mm auto; margin: 0; }
   .p-center { text-align: center; }
-  .p-big { font-size: 14pt; font-weight: bold; letter-spacing: 1px; }
-  .p-sm { font-size: 10pt; }
-  .p-line { border-top: 1px dashed #000; margin: 4px 0; }
-  .p-dbl { border-top: 2.5px solid #000; margin: 4px 0; }
-  .p-row {
-    display: flex;
-    justify-content: space-between;
-    margin: 4px 0;
-    gap: 3px;
-    font-size: 11pt;
-    line-height: 1.4;
-    flex-wrap: wrap;
-  }
-  .p-val { text-align: right; font-weight: bold; word-break: break-word;f }
-  .p-gap { height: 5mm; }
+  .p-big    { font-size: 14pt; font-weight: bold; letter-spacing: 1px; }
+  .p-sm     { font-size: 9pt; }
+  .p-line   { border-top: 1px dashed #000; margin: 4px 0; }
+  .p-dbl    { border-top: 2.5px solid #000; margin: 4px 0; }
+  .p-block  { margin: 5px 0 7px 0; line-height: 1.4; }
+  .p-lbl    { font-size: 9pt; color: #333; }
+  .p-val    { font-weight: bold; font-size: 12pt; word-break: break-word; white-space: normal; }
+  .p-amount { text-align: center; font-size: 13pt; font-weight: bold; margin: 6px 0; }
+  .p-gap    { height: 5mm; }
 }
 </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-box">
     <h2>⛽ Fuel Indent</h2>
-    <input type="password" id="loginPw" placeholder="Enter password" maxlength="4"
+    <p>Deepthi Traders &amp; Kalmargi Hardwares</p>
+    <input type="password" id="loginPw" placeholder="Password" maxlength="10"
            onkeydown="if(event.key==='Enter') doLogin()">
     <div class="lerr" id="loginErr"></div>
     <button onclick="doLogin()">Login</button>
   </div>
 </div>
-         
-<!-- PASSWORD MODAL -->
+
+<!-- ADMIN MODAL -->
 <div class="modal-bg" id="pwModal">
   <div class="modal">
     <h4 id="pwTitle">Admin Access</h4>
@@ -246,7 +190,7 @@ tr:hover td { background: #f9f9f9; }
   <div class="tab"        onclick="requireAdmin('settings')">Settings 🔒</div>
 </div>
 
-<!-- ══ INDENT ══ -->
+<!-- ══ INDENT FORM ══ -->
 <div id="page-indent" class="page active">
   <div class="card">
     <h3>Fuel Indent</h3>
@@ -293,7 +237,7 @@ tr:hover td { background: #f9f9f9; }
     <div class="row2">
       <div class="field">
         <label>Fuel Type</label>
-        <select id="fFuel" onchange="onFuelChange()" disabled>
+        <select id="fFuel" disabled>
           <option value="">-- Select --</option>
           <option value="Petrol">Petrol</option>
           <option value="Diesel">Diesel</option>
@@ -305,13 +249,6 @@ tr:hover td { background: #f9f9f9; }
         <select id="fAuth" disabled>
           <option value="">-- Select Company First --</option>
         </select>
-      </div>
-    </div>
-
-    <div class="row2">
-      <div class="field">
-        <label>Amount (₹)</label>
-        <option value="">-- Full tank ---</option>>
       </div>
     </div>
 
@@ -339,13 +276,18 @@ tr:hover td { background: #f9f9f9; }
       <table>
         <thead>
           <tr>
-            <th>Indent No</th><th>Date</th><th>Company</th><th>Driver</th>
-            <th>Vehicle</th><th>Station</th><th>Fuel</th>
-            <th>Rate/L</th><th>Litres</th><th>Amount</th><th>Auth By</th>
+            <th>Indent No</th>
+            <th>Date</th>
+            <th>Company</th>
+            <th>Driver</th>
+            <th>Vehicle</th>
+            <th>Station</th>
+            <th>Fuel</th>
+            <th>Auth By</th>
           </tr>
         </thead>
         <tbody id="recBody">
-          <tr><td colspan="11" class="empty">Loading…</td></tr>
+          <tr><td colspan="8" class="empty">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -363,50 +305,41 @@ tr:hover td { background: #f9f9f9; }
   </div>
 </div>
 
-<!-- PRINT -->
+<!-- PRINT AREA -->
 <div id="printArea"></div>
 
 <script>
-// ─────────────────────────────────────────
-// CONFIG
-// ─────────────────────────────────────────
+// ── CONFIG ──
 const ADMIN_PASS = '0820';
-const LOGIN_PASS = '321'
-const PROXY      = 'https://api.allorigins.win/get?url=';
+const LOGIN_PASS = '321';
 
-// ─────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────
-let rateReady  = false;
-let records    = [];          // kept in sync by Firestore listener
-let counter    = 1;
-let companies  = [
-         {
-    name: 'Deepthi Traders - +91 9980933973',
+// ── STATE ──
+let records   = [];
+let counter   = 1;
+let companies = [
+  {
+    name: 'Deepthi Traders',
     drivers: ['VASU'],
     vehicles: ['KA20D 2988','KA20AA 4926','KA20MB 5866 [BRV]'],
     stations: ['ANKUSH FUELS - SBRKTE','NANDI FUELS - YTNTI','ANIKA FUELS - HNSMKI','MAHALASA FUELS - BDKLKTE'],
     authorizers: ['SS','CH','RDN']
   },
   {
-    name: 'Kalmargi Hardwares - +91 9980933973',
+    name: 'Kalmargi Hardwares',
     drivers: ['PRAMOD','SACHIN','PRABHAKARA','EESHWARA','KESHAVA','NARAYANA','RAVINDRA'],
     vehicles: ['KA20AC 1177','KA20AA 9785','KA20AB 1110','KA20AA 4108','KA20AA 4828','KA20AB 4234','KA20AB 7926','KA20D 6864','KA20N 8695 [OMNI]','KA20MD 6394 [WAGNR]','KA20HA 9032 [ROYAL]','KA20ER 9010 [SCOOTY]','KA20EG 9615 [GLAMOR]','KA20ER 8952 [SPLENDOR]'],
     stations: ['ANKUSH FUELS - SBRKTE','NANDI FUELS - YTNTI','ANIKA FUELS - HNSMKI','MAHALASA FUELS - BDKLKTE'],
     authorizers: ['SS','CH','RDN']
   }
-  ];
+];
 let dbOK = false;
 
-         // ─────────────────────────────────────────
-// LOGIN
-// ─────────────────────────────────────────
+// ── LOGIN ──
 function doLogin() {
   const val = document.getElementById('loginPw').value;
   if (val === LOGIN_PASS) {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('loginPw').value = '';
-    // focus first field after login
     setTimeout(() => document.getElementById('fCompany').focus(), 100);
   } else {
     document.getElementById('loginErr').textContent = 'Incorrect password.';
@@ -414,29 +347,20 @@ function doLogin() {
     document.getElementById('loginPw').focus();
   }
 }
-// Show login on load
 window.addEventListener('load', () => {
+  setLiveDate();
+  populateCompanies();
+  updateIndentNo();
   setTimeout(() => document.getElementById('loginPw').focus(), 200);
 });
-         
-// ─────────────────────────────────────────
-// WAIT FOR FIREBASE THEN INIT
-// ─────────────────────────────────────────
+
+// ── FIREBASE ──
 async function onDbReady() {
   dbOK = true;
-  setStatus('ok', '');
-
-  // Load counter
+  setStatus('ok', '✅ Connected — records sync across all devices.');
   counter = await window._db.getCounter();
   updateIndentNo();
-
-  // Real-time record listener
-  window._db.listenRecords(rows => {
-    records = rows;
-    renderTable();
-  });
-
-  // Real-time settings listener
+  window._db.listenRecords(rows => { records = rows; renderTable(); });
   window._db.listenSettings(data => {
     if (data.companies && data.companies.length) {
       companies = data.companies;
@@ -445,31 +369,15 @@ async function onDbReady() {
     }
   });
 }
-
 window.addEventListener('dbReady', onDbReady);
+setTimeout(() => { if (!dbOK) setStatus('err', '⚠️ Firebase not connected. Records saved locally only.'); }, 5000);
 
-// Fallback: if Firebase config not filled in
-setTimeout(() => {
-  if (!dbOK) {
-    setStatus('err', '⚠️ Firebase not configured — records saved locally only. See STEP comments in HTML source.');
-  }
-}, 5000);
-
-// ─────────────────────────────────────────
-// INIT (non-db stuff)
-// ─────────────────────────────────────────
-window.onload = () => {
-  setLiveDate();
-  populateCompanies();
-  updateIndentNo();
-};
-
+// ── HELPERS ──
 function setStatus(type, msg) {
   const el = document.getElementById('dbStatus');
   el.textContent = msg;
-  el.className = 'status-bar ' + (type === 'ok' ? 'ok' : type === 'err' ? 'err' : '');
+  el.className = 'status-bar ' + type;
 }
-
 function setLiveDate() {
   const n = new Date();
   const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -477,26 +385,26 @@ function setLiveDate() {
   document.getElementById('dispDate').textContent =
     days[n.getDay()] + ', ' + n.getDate() + ' ' + months[n.getMonth()] + ' ' + n.getFullYear();
 }
-
 function todayISO() {
   const n = new Date();
   return n.getFullYear() + '-' + p2(n.getMonth()+1) + '-' + p2(n.getDate());
 }
 function p2(n) { return String(n).padStart(2,'0'); }
-
 function updateIndentNo() {
   document.getElementById('dispIndentNo').textContent = 'FI-' + String(counter).padStart(4,'0');
 }
+function fmtDate(s) {
+  if (!s) return '';
+  const [y,m,d] = s.split('-');
+  return d+'-'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+'-'+y;
+}
 
-
-// ─────────────────────────────────────────
-// COMPANY / FORM LOGIC
-// ─────────────────────────────────────────
+// ── COMPANY / FORM ──
 function populateCompanies() {
   const sel = document.getElementById('fCompany');
   const cur = sel.value;
   sel.innerHTML = '<option value="">-- Select Company --</option>';
-  companies.forEach((c, i) => {
+  companies.forEach((c,i) => {
     const o = document.createElement('option');
     o.value = i; o.textContent = c.name; sel.appendChild(o);
   });
@@ -512,8 +420,6 @@ function onCompanyChange() {
       el.disabled = true;
       el.innerHTML = '<option value="">-- Select Company First --</option>';
     });
-    document.getElementById('dispLitres').textContent = '—';
-    updateRateDisplay();
     return;
   }
   const c = companies[parseInt(idx)];
@@ -523,8 +429,6 @@ function onCompanyChange() {
   fillSel('fStation', c.stations);
   fillSel('fAuth',    c.authorizers);
   document.getElementById('fFuel').value = '';
-  document.getElementById('dispLitres').textContent = '—';
-  updateRateDisplay();
 }
 
 function fillSel(id, items) {
@@ -536,42 +440,9 @@ function fillSel(id, items) {
   });
 }
 
-function onFuelChange()     { updateRateDisplay(); calcLitres(); }
-
-function updateRateDisplay() {
-  const f  = document.getElementById('fFuel').value;
-  const el = document.getElementById('dispRate');
-  if (!f) {
-    el.className  = 'auto-val muted';
-    el.textContent = rateReady ? 'Select fuel type' : 'Fetching…';
-    return;
-  }
-  const rate = IOC[f];
-  if (!rate) {
-    el.className  = 'auto-val err-val';
-    el.textContent = 'Rate unavailable for ' + f;
-  } else {
-    el.className  = 'auto-val';
-    el.textContent = '₹' + rate.toFixed(2) + ' / Litre' + (rateReady ? '' : ' (fallback)');
-  }
-}
-
-function calcLitres() {
-  const amt  = parseFloat(document.getElementById('fAmount').value) || 0;
-  const f    = document.getElementById('fFuel').value;
-  const rate = f ? IOC[f] : 0;
-  document.getElementById('dispLitres').textContent =
-    (amt > 0 && rate) ? (amt / rate).toFixed(2) + ' L' : '—';
-}
-
-// ─────────────────────────────────────────
-// GENERATE & PRINT
-// ─────────────────────────────────────────
+// ── FORM DATA & VALIDATE ──
 function getForm() {
-  const ci   = document.getElementById('fCompany').value;
-  const f    = document.getElementById('fFuel').value;
-  const amt  = parseFloat(document.getElementById('fAmount').value) || 0;
-  const rate = f ? (IOC[f] || 0) : 0;
+  const ci = document.getElementById('fCompany').value;
   return {
     indentNo : 'FI-' + String(counter).padStart(4,'0'),
     date     : todayISO(),
@@ -580,102 +451,85 @@ function getForm() {
     driver   : document.getElementById('fDriver').value,
     vehicle  : document.getElementById('fVehicle').value,
     station  : document.getElementById('fStation').value,
-    fuel     : f,
-    auth     : document.getElementById('fAuth').value,
-    rate, amount: amt,
-    litres   : (rate && amt) ? parseFloat((amt / rate).toFixed(2)) : 0
+    fuel     : document.getElementById('fFuel').value,
+    auth     : document.getElementById('fAuth').value
   };
 }
 
 function validate(d) {
   const e = document.getElementById('errMsg');
   const checks = [
-    [!d.company,  'Select a company.'],
-    [!d.driver,   'Select driver name.'],
-    [!d.vehicle,  'Select vehicle number.'],
-    [!d.station,  'Select petrol bunk / station.'],
-    [!d.fuel,     'Select fuel type.'],
-    [!d.auth,     'Select authorized by.'],,
+    [!d.company, 'Select a company.'],
+    [!d.driver,  'Select driver name.'],
+    [!d.vehicle, 'Select vehicle number.'],
+    [!d.station, 'Select petrol bunk / station.'],
+    [!d.fuel,    'Select fuel type.'],
+    [!d.auth,    'Select authorized by.']
   ];
   for (const [fail, msg] of checks) { if (fail) { e.textContent = msg; return false; } }
   e.textContent = ''; return true;
 }
 
-function fmtDate(s) {
-  if (!s) return '';
-  const [y,m,d] = s.split('-');
-  return d+'-'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+'-'+y;
-}
-
+// ── PRINT TEMPLATE ──
 function buildPrint(d) {
-  const row = (l, v) => `
-    <div style="margin:4px 0 6px 0; line-height:1.4;">
-      <div style="font-size:9pt;">${l}</div>
-      <div style="font-weight:bold; font-size:12pt; word-break:break-word; white-space:normal;">${v}</div>
+  const blk = (lbl, val) => `
+    <div class="p-block">
+      <div class="p-lbl">${lbl}</div>
+      <div class="p-val">${val}</div>
     </div>`;
-  const rowInline = (l, v) => `<div class="p-row"><span>${l}</span><span class="p-val">${v}</span></div>`;
   return `
   <div class="p-center p-big">FUEL INDENT</div>
   <div class="p-center p-sm">${d.company}</div>
   <div class="p-dbl"></div>
-  ${row('Indent No:', d.indentNo)}
-  ${row('Date:', fmtDate(d.date))}
+  ${blk('Indent No', d.indentNo)}
+  ${blk('Date', fmtDate(d.date))}
   <div class="p-line"></div>
-  ${row('Driver:',  d.driver)}
-  ${row('Vehicle:', d.vehicle)}
-  ${row('Station:', d.station)}
-  ${row('Fuel:',    d.fuel)}
+  ${blk('Driver',  d.driver)}
+  ${blk('Vehicle', d.vehicle)}
+  ${blk('Station', d.station)}
+  ${blk('Fuel',    d.fuel)}
   <div class="p-dbl"></div>
-  ${row('AMOUNT:', '&#x20B9;' + 'Full Tank')}
+  <div class="p-amount">FULL TANK</div>
   <div class="p-dbl"></div>
-  ${row('Auth by:',    d.auth)}
+  ${blk('Authorized By', d.auth)}
   <div class="p-gap"></div>`;
 }
 
+// ── GENERATE & PRINT ──
 async function generateIndent() {
   const d = getForm();
   if (!validate(d)) return;
-
-  // Save to Firestore (or skip gracefully if not connected)
   try {
     if (dbOK) {
       await window._db.addRecord(d);
       counter++;
       await window._db.saveCounter(counter);
     } else {
-      // fallback: local only
       records.push(d);
       counter++;
       renderTable();
     }
     updateIndentNo();
-  } catch(e) {
-    console.error('Save failed', e);
-  }
-
+  } catch(e) { console.error('Save failed', e); }
   document.getElementById('printArea').innerHTML = buildPrint(d);
   setTimeout(() => window.print(), 200);
 }
 
 function resetForm() {
   document.getElementById('fCompany').value = '';
-  document.getElementById('fAmount').value  = '';
   document.getElementById('errMsg').textContent = '';
   onCompanyChange();
 }
 
-// ─────────────────────────────────────────
-// RECORDS TABLE
-// ─────────────────────────────────────────
+// ── RECORDS TABLE ──
 function renderTable() {
   const body = document.getElementById('recBody');
   document.getElementById('recCount').textContent = records.length + ' record(s)';
   if (!records.length) {
-    body.innerHTML = '<tr><td colspan="11" class="empty">No records yet.</td></tr>';
+    body.innerHTML = '<tr><td colspan="8" class="empty">No records yet.</td></tr>';
     return;
   }
-  // Sort by ts descending for display
-  const sorted = [...records].sort((a,b) => (b.ts||0) - (a.ts||0));
+  const sorted = [...records].sort((a,b) => (b.ts||0)-(a.ts||0));
   body.innerHTML = sorted.map(r => `
     <tr>
       <td>${r.indentNo}</td>
@@ -685,16 +539,11 @@ function renderTable() {
       <td><b>${r.vehicle}</b></td>
       <td>${r.station}</td>
       <td>${r.fuel}</td>
-      <td>&#x20B9;${(r.rate||0).toFixed(2)}</td>
-      <td>${(r.litres||0).toFixed(2)} L</td>
-      <td>&#x20B9;${(r.amount||0).toFixed(2)}</td>
       <td>${r.auth}</td>
     </tr>`).join('');
 }
 
-// ─────────────────────────────────────────
-// CLEAR RECORDS
-// ─────────────────────────────────────────
+// ── CLEAR RECORDS ──
 async function doClearRecords() {
   try {
     if (dbOK) {
@@ -702,41 +551,33 @@ async function doClearRecords() {
       counter = 1;
       await window._db.saveCounter(1);
     } else {
-      records = [];
-      counter = 1;
-      renderTable();
+      records = []; counter = 1; renderTable();
     }
     updateIndentNo();
-  } catch(e) {
-    alert('Error clearing records: ' + e.message);
-  }
+  } catch(e) { alert('Error: ' + e.message); }
 }
 
-// ─────────────────────────────────────────
-// EXPORT EXCEL
-// ─────────────────────────────────────────
+// ── EXPORT EXCEL ──
 function exportExcel() {
   if (!records.length) { alert('No records to export.'); return; }
   const sorted = [...records].sort((a,b) => (a.ts||0)-(b.ts||0));
   const rows = [
-    ['Indent No','Date','Company','Driver','Vehicle','Station','Fuel','Rate/L (₹)','Litres','Amount (₹)','Auth By'],
-    ...sorted.map(r => [r.indentNo,r.date,r.company,r.driver,r.vehicle,r.station,r.fuel,r.rate,r.litres,r.amount,r.auth])
+    ['Indent No','Date','Company','Driver','Vehicle','Station','Fuel','Auth By'],
+    ...sorted.map(r => [r.indentNo, r.date, r.company, r.driver, r.vehicle, r.station, r.fuel, r.auth])
   ];
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [12,12,18,18,16,24,8,10,8,12,18].map(w=>({wch:w}));
+  ws['!cols'] = [12,12,22,16,16,28,8,10].map(w=>({wch:w}));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Fuel Indents');
   XLSX.writeFile(wb, 'FuelIndents_' + todayISO() + '.xlsx');
 }
 
-// ─────────────────────────────────────────
-// SETTINGS
-// ─────────────────────────────────────────
+// ── SETTINGS ──
 function renderSettings() {
   const cont = document.getElementById('settingsContainer');
   if (!document.getElementById('page-settings').classList.contains('active')) return;
   cont.innerHTML = '';
-  companies.forEach((c, ci) => {
+  companies.forEach((c,ci) => {
     const div = document.createElement('div');
     div.className = 'settings-card';
     div.innerHTML = `
@@ -749,7 +590,6 @@ function renderSettings() {
     cont.appendChild(div);
   });
 }
-
 function mkEditor(ci, key, label) {
   const rows = (companies[ci][key]||[]).map((v,ii) => `
     <div class="list-item">
@@ -763,8 +603,7 @@ function mkEditor(ci, key, label) {
       <button class="add-btn" onclick="addItem(${ci},'${key}')">+ Add</button>
     </div>`;
 }
-
-function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function addItem(ci,key)       { companies[ci][key].push(''); renderSettings(); }
 function removeItem(ci,key,ii) { companies[ci][key].splice(ii,1); renderSettings(); }
 
@@ -777,7 +616,6 @@ async function saveSettings() {
         .map(i=>i.value.trim()).filter(v=>v!=='');
     });
   });
-
   try {
     if (dbOK) await window._db.saveSettings(companies);
     populateCompanies();
@@ -789,9 +627,7 @@ async function saveSettings() {
   renderSettings();
 }
 
-// ─────────────────────────────────────────
-// TABS
-// ─────────────────────────────────────────
+// ── TABS ──
 function showTab(name) {
   const names = ['indent','records','settings'];
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===name));
@@ -801,11 +637,8 @@ function showTab(name) {
   if (name === 'settings') renderSettings();
 }
 
-// ─────────────────────────────────────────
-// PASSWORD MODAL
-// ─────────────────────────────────────────
+// ── ADMIN MODAL ──
 let _pwTarget = null;
-
 function requireAdmin(target) {
   _pwTarget = target;
   document.getElementById('pwTitle').textContent =
@@ -815,12 +648,10 @@ function requireAdmin(target) {
   document.getElementById('pwModal').classList.add('show');
   setTimeout(() => document.getElementById('pwInput').focus(), 120);
 }
-
 function pwCancel() {
   document.getElementById('pwModal').classList.remove('show');
   _pwTarget = null;
 }
-
 function pwSubmit() {
   const val = document.getElementById('pwInput').value;
   if (val !== ADMIN_PASS) {
@@ -832,7 +663,6 @@ function pwSubmit() {
   document.getElementById('pwModal').classList.remove('show');
   const target = _pwTarget;
   _pwTarget = null;
-
   if (target === 'settings') {
     showTab('settings');
   } else if (target === 'clearRecords') {
