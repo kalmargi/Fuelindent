@@ -8,21 +8,21 @@
 
 <!-- Firebase SDK -->
 <script type="module">
-import { initializeApp }   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
 import { getFirestore, collection, doc,
          addDoc, getDocs, deleteDoc,
          setDoc, onSnapshot, orderBy,
-         query, getDoc }   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-
+         query, getDoc }   from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+ 
 const firebaseConfig = {
-  apiKey:            "AIzaSyBlQdjirQmA0oDBoALyeaKswMj2pfSdGYI",
-  authDomain:        "fuel-indent.firebaseapp.com",
-  projectId:         "fuel-indent",
-  storageBucket:     "fuel-indent.firebasestorage.app",
-  messagingSenderId: "707992681541",
-  appId:             "1:707992681541:web:b29bb30d4bfe2e831cf72c"
+  apiKey:            "AIzaSyDuIE7KdpAEwd8Cj1Eo-sHlTLHE5mtj7eg",
+  authDomain:        "fuelindent.firebaseapp.com",
+  projectId:         "fuelindent",
+  storageBucket:     "fuelindent.firebasestorage.app",
+  messagingSenderId: "590786986084",
+  appId:             "1:590786986084:web:42f6e513fb7d785cd69f71"
 };
-
+         
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
