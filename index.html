@@ -595,9 +595,7 @@ function validate(d) {
     [!d.vehicle,  'Select vehicle number.'],
     [!d.station,  'Select petrol bunk / station.'],
     [!d.fuel,     'Select fuel type.'],
-    [!d.auth,     'Select authorized by.'],
-    [!d.amount,   'Enter amount.'],
-    [!d.rate,     'Rate not available for selected fuel.'],
+    [!d.auth,     'Select authorized by.'],,
   ];
   for (const [fail, msg] of checks) { if (fail) { e.textContent = msg; return false; } }
   e.textContent = ''; return true;
