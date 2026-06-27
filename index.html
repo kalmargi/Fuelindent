@@ -5,40 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fuel Indent</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<!-- Firebase SDK -->
-<script type="module">
-import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-import { getFirestore, collection, doc,
-         addDoc, getDocs, deleteDoc,
-         setDoc, onSnapshot, orderBy,
-         query, getDoc }   from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
- 
-const firebaseConfig = {
-  apiKey:            "AIzaSyDuIE7KdpAEwd8Cj1Eo-sHlTLHE5mtj7eg",
-  authDomain:        "fuelindent.firebaseapp.com",
-  projectId:         "fuelindent",
-  storageBucket:     "fuelindent.firebasestorage.app",
-  messagingSenderId: "590786986084",
-  appId:             "1:590786986084:web:42f6e513fb7d785cd69f71"
-};
-         
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-
-window._db = {
-  async addRecord(data)      { await addDoc(collection(db, 'fi_records'), data); },
-  async clearRecords()       { const s = await getDocs(collection(db,'fi_records')); await Promise.all(s.docs.map(d=>deleteDoc(d.ref))); },
-  async saveSettings(co)     { await setDoc(doc(db,'fi_settings','data'), { companies: co }); },
-  async saveCounter(n)       { await setDoc(doc(db,'fi_counter','data'), { value: n }); },
-  async getCounter()         { const s = await getDoc(doc(db,'fi_counter','data')); return s.exists() ? (s.data().value||1) : 1; },
-  listenRecords(cb)          { return onSnapshot(query(collection(db,'fi_records'), orderBy('ts','asc')), s => cb(s.docs.map(d=>({_id:d.id,...d.data()})))); },
-  listenSettings(cb)         { return onSnapshot(doc(db,'fi_settings','data'), s => { if(s.exists()) cb(s.data()); }); }
-};
-window._dbReady = true;
-window.dispatchEvent(new Event('dbReady'));
-</script>
-
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Arial, sans-serif; font-size: 13px; background: #e8e8e8; padding: 12px; }
@@ -74,11 +40,6 @@ body { font-family: Arial, sans-serif; font-size: 13px; background: #e8e8e8; pad
 .row2 { display: flex; gap: 8px; }
 .row2 .field { flex: 1; }
 .auto-val { background: #f4f4f4; border: 1px solid #ccc; padding: 6px 8px; font-size: 13px; font-weight: bold; min-height: 30px; color: #111; }
-
-/* STATUS */
-.status-bar { max-width: 480px; margin: 0 auto 8px auto; padding: 6px 10px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff3cd; border: 1px solid #ffc107; }
-.status-bar.ok  { background: #d4edda; border-color: #28a745; }
-.status-bar.err { background: #f8d7da; border-color: #dc3545; }
 
 .err { color: #c00; font-size: 11px; margin-top: 5px; min-height: 16px; }
 
@@ -179,9 +140,6 @@ tr:hover td { background: #f9f9f9; }
     </div>
   </div>
 </div>
-
-<!-- DB STATUS -->
-<div class="status-bar" id="dbStatus">⏳ Connecting to database…</div>
 
 <!-- TABS -->
 <div class="tabs">
@@ -287,7 +245,7 @@ tr:hover td { background: #f9f9f9; }
           </tr>
         </thead>
         <tbody id="recBody">
-          <tr><td colspan="8" class="empty">Loading…</td></tr>
+          <tr><td colspan="8" class="empty">No records yet.</td></tr>
         </tbody>
       </table>
     </div>
@@ -313,26 +271,31 @@ tr:hover td { background: #f9f9f9; }
 const ADMIN_PASS = '0820';
 const LOGIN_PASS = '321';
 
-// ── STATE ──
-let records   = [];
-let counter   = 1;
-let companies = [
+// ── STATE (localStorage) ──
+let records  = JSON.parse(localStorage.getItem('fi_records')  || '[]');
+let counter  = parseInt(localStorage.getItem('fi_counter')    || '1');
+let companies = JSON.parse(localStorage.getItem('fi_companies') || 'null') || [
   {
-    name: 'Deepthi Traders - +91 9980933973',
+    name: 'Deepthi Traders',
     drivers: ['VASU'],
     vehicles: ['KA20D 2988','KA20AA 4926','KA20MB 5866 [BRV]'],
     stations: ['ANKUSH FUELS - SBRKTE','NANDI FUELS - YTNTI','ANIKA FUELS - HNSMKI','MAHALASA FUELS - BDKLKTE'],
     authorizers: ['SS','CH','RDN']
   },
   {
-    name: 'Kalmargi Hardwares - +91 9980933973',
+    name: 'Kalmargi Hardwares',
     drivers: ['PRAMOD','SACHIN','PRABHAKARA','EESHWARA','KESHAVA','NARAYANA','RAVINDRA'],
     vehicles: ['KA20AC 1177','KA20AA 9785','KA20AB 1110','KA20AA 4108','KA20AA 4828','KA20AB 4234','KA20AB 7926','KA20D 6864','KA20N 8695 [OMNI]','KA20MD 6394 [WAGNR]','KA20HA 9032 [ROYAL]','KA20ER 9010 [SCOOTY]','KA20EG 9615 [GLAMOR]','KA20ER 8952 [SPLENDOR]'],
     stations: ['ANKUSH FUELS - SBRKTE','NANDI FUELS - YTNTI','ANIKA FUELS - HNSMKI','MAHALASA FUELS - BDKLKTE'],
     authorizers: ['SS','CH','RDN']
   }
 ];
-let dbOK = false;
+
+function save() {
+  localStorage.setItem('fi_records',   JSON.stringify(records));
+  localStorage.setItem('fi_counter',   String(counter));
+  localStorage.setItem('fi_companies', JSON.stringify(companies));
+}
 
 // ── LOGIN ──
 function doLogin() {
@@ -347,42 +310,17 @@ function doLogin() {
     document.getElementById('loginPw').focus();
   }
 }
-window.addEventListener('load', () => {
+
+// ── INIT ──
+window.onload = () => {
   setLiveDate();
   populateCompanies();
   updateIndentNo();
+  renderTable();
   setTimeout(() => document.getElementById('loginPw').focus(), 200);
-});
-
-// ── FIREBASE ──
-async function onDbReady() {
-  dbOK = true;
-  setStatus('ok', '✅ Connected — records sync across all devices.');
-  counter = await window._db.getCounter();
-  updateIndentNo();
-  window._db.listenRecords(rows => {
-    // Firestore is source of truth — replace local records fully
-    records = rows;
-    updateIndentNo();
-    renderTable();
-  });
-  window._db.listenSettings(data => {
-    if (data.companies && data.companies.length) {
-      companies = data.companies;
-      populateCompanies();
-      renderSettings();
-    }
-  });
-}
-window.addEventListener('dbReady', onDbReady);
-setTimeout(() => { if (!dbOK) setStatus('err', '⚠️ Firebase not connected. Records saved locally only.'); }, 5000);
+};
 
 // ── HELPERS ──
-function setStatus(type, msg) {
-  const el = document.getElementById('dbStatus');
-  el.textContent = msg;
-  el.className = 'status-bar ' + type;
-}
 function setLiveDate() {
   const n = new Date();
   const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -501,24 +439,14 @@ function buildPrint(d) {
 }
 
 // ── GENERATE & PRINT ──
-async function generateIndent() {
+function generateIndent() {
   const d = getForm();
   if (!validate(d)) return;
-  try {
-    if (dbOK) {
-      await window._db.addRecord(d);
-      await window._db.saveCounter(counter + 1);
-    }
-    // Always update locally so Records tab shows it immediately
-    records.push({ ...d });
-    counter++;
-    updateIndentNo();
-    renderTable();
-  } catch(e) {
-    console.error('Save failed', e);
-    alert('Error saving record: ' + e.message);
-    return;
-  }
+  records.push(d);
+  counter++;
+  save();
+  updateIndentNo();
+  renderTable();
   document.getElementById('printArea').innerHTML = buildPrint(d);
   setTimeout(() => window.print(), 200);
 }
@@ -537,8 +465,7 @@ function renderTable() {
     body.innerHTML = '<tr><td colspan="8" class="empty">No records yet.</td></tr>';
     return;
   }
-  const sorted = [...records].sort((a,b) => (b.ts||0)-(a.ts||0));
-  body.innerHTML = sorted.map(r => `
+  body.innerHTML = [...records].reverse().map(r => `
     <tr>
       <td>${r.indentNo}</td>
       <td>${fmtDate(r.date)}</td>
@@ -552,26 +479,19 @@ function renderTable() {
 }
 
 // ── CLEAR RECORDS ──
-async function doClearRecords() {
-  try {
-    if (dbOK) {
-      await window._db.clearRecords();
-      counter = 1;
-      await window._db.saveCounter(1);
-    } else {
-      records = []; counter = 1; renderTable();
-    }
-    updateIndentNo();
-  } catch(e) { alert('Error: ' + e.message); }
+function doClearRecords() {
+  records = []; counter = 1;
+  save();
+  updateIndentNo();
+  renderTable();
 }
 
 // ── EXPORT EXCEL ──
 function exportExcel() {
   if (!records.length) { alert('No records to export.'); return; }
-  const sorted = [...records].sort((a,b) => (a.ts||0)-(b.ts||0));
   const rows = [
     ['Indent No','Date','Company','Driver','Vehicle','Station','Fuel','Auth By'],
-    ...sorted.map(r => [r.indentNo, r.date, r.company, r.driver, r.vehicle, r.station, r.fuel, r.auth])
+    ...records.map(r => [r.indentNo, r.date, r.company, r.driver, r.vehicle, r.station, r.fuel, r.auth])
   ];
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!cols'] = [12,12,22,16,16,28,8,10].map(w=>({wch:w}));
@@ -615,7 +535,7 @@ function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').
 function addItem(ci,key)       { companies[ci][key].push(''); renderSettings(); }
 function removeItem(ci,key,ii) { companies[ci][key].splice(ii,1); renderSettings(); }
 
-async function saveSettings() {
+function saveSettings() {
   companies.forEach((c,ci) => {
     c.name = (document.getElementById('co_name_'+ci).value||'').trim() || c.name;
     ['drivers','vehicles','stations','authorizers'].forEach(key => {
@@ -624,13 +544,9 @@ async function saveSettings() {
         .map(i=>i.value.trim()).filter(v=>v!=='');
     });
   });
-  try {
-    if (dbOK) await window._db.saveSettings(companies);
-    populateCompanies();
-    document.getElementById('settingsMsg').textContent = '✓ Settings saved to cloud.';
-  } catch(e) {
-    document.getElementById('settingsMsg').textContent = '⚠ Save failed: ' + e.message;
-  }
+  save();
+  populateCompanies();
+  document.getElementById('settingsMsg').textContent = '✓ Settings saved.';
   setTimeout(()=>document.getElementById('settingsMsg').textContent='', 3000);
   renderSettings();
 }
