@@ -248,12 +248,6 @@ tr:hover td { background: #f9f9f9; }
 
 <!-- ══ INDENT ══ -->
 <div id="page-indent" class="page active">
-  <div class="rate-bar">
-    <span>IOC Rates (Mysuru, Karnataka):</span>
-    <b id="rateBarTxt">Fetching live rates…</b>
-    <span class="rate-refresh" onclick="fetchRates()">↻ Refresh</span>
-  </div>
-
   <div class="card">
     <h3>Fuel Indent</h3>
 
@@ -316,18 +310,9 @@ tr:hover td { background: #f9f9f9; }
 
     <div class="row2">
       <div class="field">
-        <label>IOC Rate / Litre (₹)</label>
-        <div class="auto-val muted" id="dispRate">Fetching…</div>
-      </div>
-      <div class="field">
         <label>Amount (₹)</label>
-        <input type="number" id="fAmount" placeholder="0.00" step="0.01" min="0" oninput="calcLitres()">
+        <option value="">-- Full tank ---</option>>
       </div>
-    </div>
-
-    <div class="field">
-      <label>Litres (auto-calculated)</label>
-      <div class="auto-val" id="dispLitres">—</div>
     </div>
 
     <div class="err" id="errMsg"></div>
@@ -387,15 +372,11 @@ tr:hover td { background: #f9f9f9; }
 // ─────────────────────────────────────────
 const ADMIN_PASS = '0820';
 const LOGIN_PASS = '321'
-const FALLBACK   = { Petrol: 103.07, Diesel: 90.99, CNG: null };
 const PROXY      = 'https://api.allorigins.win/get?url=';
-const URL_P      = encodeURIComponent('https://www.goodreturns.in/petrol-price-in-mysore.html');
-const URL_D      = encodeURIComponent('https://www.goodreturns.in/diesel-price-in-mysore.html');
 
 // ─────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────
-let IOC        = { ...FALLBACK };
 let rateReady  = false;
 let records    = [];          // kept in sync by Firestore listener
 let counter    = 1;
@@ -481,7 +462,6 @@ window.onload = () => {
   setLiveDate();
   populateCompanies();
   updateIndentNo();
-  fetchRates();
 };
 
 function setStatus(type, msg) {
@@ -508,45 +488,6 @@ function updateIndentNo() {
   document.getElementById('dispIndentNo').textContent = 'FI-' + String(counter).padStart(4,'0');
 }
 
-// ─────────────────────────────────────────
-// LIVE IOC RATE FETCH
-// ─────────────────────────────────────────
-async function fetchRates() {
-  const barEl  = document.getElementById('rateBarTxt');
-  const rateEl = document.getElementById('dispRate');
-  barEl.textContent = 'Fetching…';
-  rateEl.className = 'auto-val muted';
-  rateEl.textContent = 'Fetching…';
-
-  try {
-    const [rP, rD] = await Promise.all([
-      fetch(PROXY + URL_P).then(r => r.json()),
-      fetch(PROXY + URL_D).then(r => r.json())
-    ]);
-    const petrol = extractPrice(rP.contents);
-    const diesel = extractPrice(rD.contents);
-    if (!petrol || !diesel) throw new Error('parse fail');
-    IOC.Petrol = petrol;
-    IOC.Diesel = diesel;
-    rateReady  = true;
-    barEl.textContent = `Petrol ₹${petrol.toFixed(2)}/L   Diesel ₹${diesel.toFixed(2)}/L   (live · IOC Mysuru)`;
-    onFuelChange();
-  } catch(e) {
-    IOC = { ...FALLBACK };
-    rateReady = false;
-    barEl.textContent = `Petrol ₹${IOC.Petrol.toFixed(2)}/L   Diesel ₹${IOC.Diesel.toFixed(2)}/L   ⚠ fallback`;
-    onFuelChange();
-  }
-}
-
-function extractPrice(html) {
-  if (!html) return null;
-  const m = html.match(/(?:₹|Rs\.?\s*)(1\d{2}\.\d{1,2})\s*(?:per\s*li|\/li)/i);
-  if (m) return parseFloat(m[1]);
-  const m2 = html.match(/(1\d{2}\.\d{2})\s*per\s*li/i);
-  if (m2) return parseFloat(m2[1]);
-  return null;
-}
 
 // ─────────────────────────────────────────
 // COMPANY / FORM LOGIC
