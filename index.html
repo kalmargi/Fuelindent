@@ -842,31 +842,31 @@
 
       function onCompanyChange() {
         const idx = document.getElementById("fCompany").value;
-        // ── CHANGE: added 'fFillType' to deps ──
-        const deps = [
-          "fDriver",
-          "fVehicle",
-          "fStation",
-          "fAuth",
-          "fFuel",
-          "fFillType",
-        ];
+        const dataFields = ["fDriver", "fVehicle", "fStation", "fAuth"];
+        const allFields = [...dataFields, "fFuel", "fFillType"];
+
         if (idx === "") {
-          deps.forEach((id) => {
-            const el = document.getElementById(id);
-            el.disabled = true;
-            el.innerHTML =
-              id === "fFuel" || id === "fFillType"
-                ? '<option value="">-- Select --</option>'
-                : '<option value="">-- Select Company First --</option>';
+          // Disable all dependent fields
+          allFields.forEach(
+            (id) => (document.getElementById(id).disabled = true),
+          );
+          // Reset data-driven selects (their options come from company data)
+          dataFields.forEach((id) => {
+            document.getElementById(id).innerHTML =
+              '<option value="">-- Select Company First --</option>';
           });
-          // Hide amount field when company is deselected
+          // For fFuel and fFillType: just reset value — keep their options intact
+          document.getElementById("fFuel").value = "";
+          document.getElementById("fFillType").value = "";
           document.getElementById("amountField").style.display = "none";
           document.getElementById("fAmount").value = "";
           return;
         }
+
         const c = companies[parseInt(idx)];
-        deps.forEach((id) => (document.getElementById(id).disabled = false));
+        allFields.forEach(
+          (id) => (document.getElementById(id).disabled = false),
+        );
         fillSel("fDriver", c.drivers);
         fillSel("fVehicle", c.vehicles);
         fillSel("fStation", c.stations);
