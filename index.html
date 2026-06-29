@@ -1,463 +1,1033 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fuel Indent</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Arial, sans-serif; font-size: 13px; background: #e8e8e8; padding: 12px; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fuel Indent</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        background: #e8e8e8;
+        padding: 12px;
+      }
 
-/* LOGIN */
-#loginScreen { position: fixed; inset: 0; background: #222; display: flex; align-items: center; justify-content: center; z-index: 999; }
-#loginScreen.hidden { display: none; }
-.login-box { background: #fff; border: 1px solid #aaa; padding: 32px 28px; width: 300px; max-width: 92%; text-align: center; }
-.login-box h2 { font-size: 15px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
-.login-box p  { font-size: 11px; color: #777; margin-bottom: 20px; }
-.login-box input[type="password"] { width: 100%; padding: 9px 10px; font-size: 15px; border: 1px solid #bbb; margin-bottom: 8px; letter-spacing: 6px; text-align: center; }
-.login-box input[type="password"]:focus { outline: 2px solid #333; }
-.login-box button { width: 100%; padding: 10px; font-size: 14px; font-weight: bold; background: #222; color: #fff; border: none; cursor: pointer; }
-.login-box button:hover { background: #444; }
-.login-box .lerr { color: #c00; font-size: 11px; min-height: 16px; margin-bottom: 6px; }
+      /* LOGIN */
+      #loginScreen {
+        position: fixed;
+        inset: 0;
+        background: #222;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+      }
+      #loginScreen.hidden {
+        display: none;
+      }
+      .login-box {
+        background: #fff;
+        border: 1px solid #aaa;
+        padding: 32px 28px;
+        width: 300px;
+        max-width: 92%;
+        text-align: center;
+      }
+      .login-box h2 {
+        font-size: 15px;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .login-box p {
+        font-size: 11px;
+        color: #777;
+        margin-bottom: 20px;
+      }
+      .login-box input[type="password"] {
+        width: 100%;
+        padding: 9px 10px;
+        font-size: 15px;
+        border: 1px solid #bbb;
+        margin-bottom: 8px;
+        letter-spacing: 6px;
+        text-align: center;
+      }
+      .login-box input[type="password"]:focus {
+        outline: 2px solid #333;
+      }
+      .login-box button {
+        width: 100%;
+        padding: 10px;
+        font-size: 14px;
+        font-weight: bold;
+        background: #222;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+      .login-box button:hover {
+        background: #444;
+      }
+      .login-box .lerr {
+        color: #c00;
+        font-size: 11px;
+        min-height: 16px;
+        margin-bottom: 6px;
+      }
 
-/* TABS */
-.tabs { display: flex; gap: 4px; margin-bottom: 12px; }
-.tab { padding: 7px 18px; border: 1px solid #999; background: #ddd; cursor: pointer; font-size: 13px; font-weight: bold; user-select: none; }
-.tab.active { background: #fff; border-bottom: 1px solid #fff; position: relative; top: 1px; }
-.page { display: none; }
-.page.active { display: block; }
+      /* TABS */
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 12px;
+      }
+      .tab {
+        padding: 7px 18px;
+        border: 1px solid #999;
+        background: #ddd;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: bold;
+        user-select: none;
+      }
+      .tab.active {
+        background: #fff;
+        border-bottom: 1px solid #fff;
+        position: relative;
+        top: 1px;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
 
-/* CARD */
-.card { background: #fff; border: 1px solid #bbb; padding: 14px; max-width: 480px; margin: 0 auto 14px auto; }
-.card h3 { font-size: 13px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 6px; margin-bottom: 10px; text-transform: uppercase; }
+      /* CARD */
+      .card {
+        background: #fff;
+        border: 1px solid #bbb;
+        padding: 14px;
+        max-width: 480px;
+        margin: 0 auto 14px auto;
+      }
+      .card h3 {
+        font-size: 13px;
+        font-weight: bold;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+      }
 
-/* FIELDS */
-.field { margin-bottom: 9px; }
-.field label { display: block; font-size: 11px; font-weight: bold; text-transform: uppercase; color: #555; margin-bottom: 3px; }
-.field select { width: 100%; padding: 6px 8px; font-size: 13px; border: 1px solid #bbb; }
-.field select:focus { outline: 2px solid #333; }
-.row2 { display: flex; gap: 8px; }
-.row2 .field { flex: 1; }
-.auto-val { background: #f4f4f4; border: 1px solid #ccc; padding: 6px 8px; font-size: 13px; font-weight: bold; min-height: 30px; color: #111; }
+      /* FIELDS */
+      .field {
+        margin-bottom: 9px;
+      }
+      .field label {
+        display: block;
+        font-size: 11px;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #555;
+        margin-bottom: 3px;
+      }
+      .field select {
+        width: 100%;
+        padding: 6px 8px;
+        font-size: 13px;
+        border: 1px solid #bbb;
+      }
+      .field select:focus {
+        outline: 2px solid #333;
+      }
+      .field input[type="number"] {
+        width: 100%;
+        padding: 6px 8px;
+        font-size: 13px;
+        border: 1px solid #bbb;
+      }
+      .field input[type="number"]:focus {
+        outline: 2px solid #333;
+      }
+      .row2 {
+        display: flex;
+        gap: 8px;
+      }
+      .row2 .field {
+        flex: 1;
+      }
+      .auto-val {
+        background: #f4f4f4;
+        border: 1px solid #ccc;
+        padding: 6px 8px;
+        font-size: 13px;
+        font-weight: bold;
+        min-height: 30px;
+        color: #111;
+      }
 
-.err { color: #c00; font-size: 11px; margin-top: 5px; min-height: 16px; }
+      .err {
+        color: #c00;
+        font-size: 11px;
+        margin-top: 5px;
+        min-height: 16px;
+      }
 
-/* BUTTONS */
-.btn-row { display: flex; gap: 8px; margin-top: 10px; }
-button { flex: 1; padding: 8px; font-size: 13px; font-weight: bold; border: 1px solid #555; background: #fff; cursor: pointer; }
-button:hover { background: #eee; }
-.btn-dark  { background: #222; color: #fff; border-color: #222; }
-.btn-dark:hover  { background: #444; }
-.btn-green { background: #1a6630; color: #fff; border-color: #1a6630; }
-.btn-green:hover { background: #0f4a22; }
-.btn-red   { background: #a00; color: #fff; border-color: #a00; }
-.btn-red:hover   { background: #c00; }
+      /* BUTTONS */
+      .btn-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      button {
+        flex: 1;
+        padding: 8px;
+        font-size: 13px;
+        font-weight: bold;
+        border: 1px solid #555;
+        background: #fff;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #eee;
+      }
+      .btn-dark {
+        background: #222;
+        color: #fff;
+        border-color: #222;
+      }
+      .btn-dark:hover {
+        background: #444;
+      }
+      .btn-green {
+        background: #1a6630;
+        color: #fff;
+        border-color: #1a6630;
+      }
+      .btn-green:hover {
+        background: #0f4a22;
+      }
+      .btn-red {
+        background: #a00;
+        color: #fff;
+        border-color: #a00;
+      }
+      .btn-red:hover {
+        background: #c00;
+      }
+      .btn-print {
+        background: #1a4a7a;
+        color: #fff;
+        border-color: #1a4a7a;
+        padding: 3px 9px;
+        font-size: 11px;
+        flex: none;
+      }
+      .btn-print:hover {
+        background: #0f3560;
+      }
 
-/* RECORDS */
-.records-card { background: #fff; border: 1px solid #bbb; padding: 14px; max-width: 1000px; margin: 0 auto; }
-.rec-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
-.rec-hdr h3 { font-size: 13px; font-weight: bold; text-transform: uppercase; }
-.tbl-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-th { background: #333; color: #fff; padding: 6px 8px; text-align: left; font-size: 11px; white-space: nowrap; }
-td { padding: 5px 8px; border-bottom: 1px solid #e0e0e0; white-space: nowrap; }
-tr:hover td { background: #f9f9f9; }
-.empty { text-align: center; padding: 20px; color: #999; }
+      /* RECORDS */
+      .records-card {
+        background: #fff;
+        border: 1px solid #bbb;
+        padding: 14px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .rec-hdr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .rec-hdr h3 {
+        font-size: 13px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+      .tbl-wrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      th {
+        background: #333;
+        color: #fff;
+        padding: 6px 8px;
+        text-align: left;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      td {
+        padding: 5px 8px;
+        border-bottom: 1px solid #e0e0e0;
+        white-space: nowrap;
+      }
+      tr:hover td {
+        background: #f9f9f9;
+      }
+      .empty {
+        text-align: center;
+        padding: 20px;
+        color: #999;
+      }
 
-/* SETTINGS */
-.settings-card { background: #fff; border: 1px solid #bbb; padding: 14px; max-width: 540px; margin: 0 auto 14px auto; }
-.settings-card h3 { font-size: 13px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 6px; margin-bottom: 10px; text-transform: uppercase; }
-.list-editor { display: flex; flex-direction: column; gap: 5px; margin-bottom: 6px; }
-.list-item { display: flex; gap: 6px; align-items: center; }
-.list-item input { flex: 1; padding: 4px 6px; font-size: 12px; border: 1px solid #bbb; }
-.list-item button { flex: none; padding: 4px 8px; font-size: 12px; background: #eee; border: 1px solid #bbb; color: #a00; font-weight: bold; cursor: pointer; }
-.list-item button:hover { background: #fdd; }
-.add-btn { font-size: 12px; padding: 4px 10px; background: #eee; border: 1px solid #bbb; cursor: pointer; font-weight: bold; margin-top: 2px; }
-.add-btn:hover { background: #ddd; }
-.co-name-input { width: 100%; padding: 5px 7px; font-size: 13px; border: 1px solid #bbb; margin-bottom: 8px; font-weight: bold; }
+      /* SETTINGS */
+      .settings-card {
+        background: #fff;
+        border: 1px solid #bbb;
+        padding: 14px;
+        max-width: 540px;
+        margin: 0 auto 14px auto;
+      }
+      .settings-card h3 {
+        font-size: 13px;
+        font-weight: bold;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+      }
+      .list-editor {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        margin-bottom: 6px;
+      }
+      .list-item {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .list-item input {
+        flex: 1;
+        padding: 4px 6px;
+        font-size: 12px;
+        border: 1px solid #bbb;
+      }
+      .list-item button {
+        flex: none;
+        padding: 4px 8px;
+        font-size: 12px;
+        background: #eee;
+        border: 1px solid #bbb;
+        color: #a00;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .list-item button:hover {
+        background: #fdd;
+      }
+      .add-btn {
+        font-size: 12px;
+        padding: 4px 10px;
+        background: #eee;
+        border: 1px solid #bbb;
+        cursor: pointer;
+        font-weight: bold;
+        margin-top: 2px;
+      }
+      .add-btn:hover {
+        background: #ddd;
+      }
+      .co-name-input {
+        width: 100%;
+        padding: 5px 7px;
+        font-size: 13px;
+        border: 1px solid #bbb;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
 
-/* MODAL */
-.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-.modal-bg.show { display: flex; }
-.modal { background: #fff; border: 1px solid #aaa; padding: 22px 24px; width: 280px; max-width: 90%; }
-.modal h4 { font-size: 13px; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
-.modal input[type="password"] { width: 100%; padding: 7px 9px; font-size: 14px; border: 1px solid #bbb; margin-bottom: 6px; letter-spacing: 4px; }
-.modal input[type="password"]:focus { outline: 2px solid #333; }
-.modal .merr { color: #c00; font-size: 11px; min-height: 16px; margin-bottom: 6px; }
-.modal .mbtn-row { display: flex; gap: 8px; }
+      /* MODAL */
+      .modal-bg {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-bg.show {
+        display: flex;
+      }
+      .modal {
+        background: #fff;
+        border: 1px solid #aaa;
+        padding: 22px 24px;
+        width: 280px;
+        max-width: 90%;
+      }
+      .modal h4 {
+        font-size: 13px;
+        font-weight: bold;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+      }
+      .modal input[type="password"] {
+        width: 100%;
+        padding: 7px 9px;
+        font-size: 14px;
+        border: 1px solid #bbb;
+        margin-bottom: 6px;
+        letter-spacing: 4px;
+      }
+      .modal input[type="password"]:focus {
+        outline: 2px solid #333;
+      }
+      .modal .merr {
+        color: #c00;
+        font-size: 11px;
+        min-height: 16px;
+        margin-bottom: 6px;
+      }
+      .modal .mbtn-row {
+        display: flex;
+        gap: 8px;
+      }
 
-/* PRINT — 58mm thermal */
-#printArea { display: none; }
-@media print {
-  body > *:not(#printArea) { display: none !important; }
-  #printArea {
-    display: block !important;
-    width: 52mm;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 11pt;
-    color: #000;
-    padding: 2mm 2mm;
-  }
-  @page { size: 58mm auto; margin: 0; }
-  .p-center { text-align: center; }
-  .p-big    { font-size: 14pt; font-weight: bold; letter-spacing: 1px; }
-  .p-sm     { font-size: 9pt; }
-  .p-line   { border-top: 1px dashed #000; margin: 4px 0; }
-  .p-dbl    { border-top: 2.5px solid #000; margin: 4px 0; }
-  .p-block  { margin: 5px 0 7px 0; line-height: 1.4; }
-  .p-lbl    { font-size: 9pt; color: #333; }
-  .p-val    { font-weight: bold; font-size: 12pt; word-break: break-word; white-space: normal; }
-  .p-amount { text-align: center; font-size: 13pt; font-weight: bold; margin: 6px 0; }
-  .p-gap    { height: 5mm; }
-}
-</style>
-</head>
-<body>
-
-<!-- LOGIN -->
-<div id="loginScreen">
-  <div class="login-box">
-    <h2>⛽ Fuel Indent</h2>
-    <p>Deepthi Traders &amp; Kalmargi Hardwares</p>
-    <input type="password" id="loginPw" placeholder="Password" maxlength="10"
-           onkeydown="if(event.key==='Enter') doLogin()">
-    <div class="lerr" id="loginErr"></div>
-    <button onclick="doLogin()">Login</button>
-  </div>
-</div>
-
-<!-- ADMIN MODAL -->
-<div class="modal-bg" id="pwModal">
-  <div class="modal">
-    <h4 id="pwTitle">Admin Access</h4>
-    <input type="password" id="pwInput" placeholder="Password" maxlength="20"
-           onkeydown="if(event.key==='Enter') pwSubmit()">
-    <div class="merr" id="pwErr"></div>
-    <div class="mbtn-row">
-      <button onclick="pwCancel()">Cancel</button>
-      <button class="btn-dark" onclick="pwSubmit()">OK</button>
-    </div>
-  </div>
-</div>
-
-<!-- TABS -->
-<div class="tabs">
-  <div class="tab active" onclick="showTab('indent')">New Indent</div>
-  <div class="tab"        onclick="showTab('records')">Records</div>
-
-</div>
-
-<!-- ══ INDENT FORM ══ -->
-<div id="page-indent" class="page active">
-  <div class="card">
-    <h3>Fuel Indent</h3>
-
-    <div class="field">
-      <label>Company</label>
-      <select id="fCompany" onchange="onCompanyChange()">
-        <option value="">-- Select Company --</option>
-      </select>
-    </div>
-
-    <div class="row2">
-      <div class="field">
-        <label>Indent No.</label>
-        <div class="auto-val" id="dispIndentNo">—</div>
+      /* PRINT — 58mm thermal */
+      #printArea {
+        display: none;
+      }
+      @media print {
+        body > *:not(#printArea) {
+          display: none !important;
+        }
+        #printArea {
+          display: block !important;
+          width: 52mm;
+          font-family: "Courier New", Courier, monospace;
+          font-size: 11pt;
+          color: #000;
+          padding: 2mm 2mm;
+        }
+        @page {
+          size: 58mm auto;
+          margin: 0;
+        }
+        .p-center {
+          text-align: center;
+        }
+        .p-big {
+          font-size: 14pt;
+          font-weight: bold;
+          letter-spacing: 1px;
+        }
+        .p-sm {
+          font-size: 9pt;
+        }
+        .p-line {
+          border-top: 1px dashed #000;
+          margin: 4px 0;
+        }
+        .p-dbl {
+          border-top: 2.5px solid #000;
+          margin: 4px 0;
+        }
+        .p-block {
+          margin: 5px 0 7px 0;
+          line-height: 1.4;
+        }
+        .p-lbl {
+          font-size: 9pt;
+          color: #333;
+        }
+        .p-val {
+          font-weight: bold;
+          font-size: 12pt;
+          word-break: break-word;
+          white-space: normal;
+        }
+        .p-amount {
+          text-align: center;
+          font-size: 13pt;
+          font-weight: bold;
+          margin: 6px 0;
+        }
+        .p-gap {
+          height: 5mm;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- LOGIN -->
+    <div id="loginScreen">
+      <div class="login-box">
+        <h2>⛽ Fuel Indent</h2>
+        <p>Deepthi Traders &amp; Kalmargi Hardwares</p>
+        <input
+          type="password"
+          id="loginPw"
+          placeholder="Password"
+          maxlength="10"
+          onkeydown="if (event.key === 'Enter') doLogin();"
+        />
+        <div class="lerr" id="loginErr"></div>
+        <button onclick="doLogin()">Login</button>
       </div>
-      <div class="field">
-        <label>Date</label>
-        <div class="auto-val" id="dispDate">—</div>
+    </div>
+
+    <!-- ADMIN MODAL -->
+    <div class="modal-bg" id="pwModal">
+      <div class="modal">
+        <h4 id="pwTitle">Admin Access</h4>
+        <input
+          type="password"
+          id="pwInput"
+          placeholder="Password"
+          maxlength="20"
+          onkeydown="if (event.key === 'Enter') pwSubmit();"
+        />
+        <div class="merr" id="pwErr"></div>
+        <div class="mbtn-row">
+          <button onclick="pwCancel()">Cancel</button>
+          <button class="btn-dark" onclick="pwSubmit()">OK</button>
+        </div>
       </div>
     </div>
 
-    <div class="field">
-      <label>Driver Name</label>
-      <select id="fDriver" disabled>
-        <option value="">-- Select Company First --</option>
-      </select>
+    <!-- TABS -->
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('indent')">New Indent</div>
+      <div class="tab" onclick="showTab('records')">Records</div>
     </div>
 
-    <div class="field">
-      <label>Vehicle Number</label>
-      <select id="fVehicle" disabled>
-        <option value="">-- Select Company First --</option>
-      </select>
-    </div>
+    <!-- ══ INDENT FORM ══ -->
+    <div id="page-indent" class="page active">
+      <div class="card">
+        <h3>Fuel Indent</h3>
 
-    <div class="field">
-      <label>Petrol Bunk / Station</label>
-      <select id="fStation" disabled>
-        <option value="">-- Select Company First --</option>
-      </select>
-    </div>
+        <div class="field">
+          <label>Company</label>
+          <select id="fCompany" onchange="onCompanyChange()">
+            <option value="">-- Select Company --</option>
+          </select>
+        </div>
 
-    <div class="row2">
-      <div class="field">
-        <label>Fuel Type</label>
-        <select id="fFuel" disabled>
-          <option value="">-- Select --</option>
-          <option value="Petrol">Petrol</option>
-          <option value="Diesel">Diesel</option>
-          <option value="CNG">CNG</option>
-        </select>
+        <div class="row2">
+          <div class="field">
+            <label>Indent No.</label>
+            <div class="auto-val" id="dispIndentNo">—</div>
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <div class="auto-val" id="dispDate">—</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Driver Name</label>
+          <select id="fDriver" disabled>
+            <option value="">-- Select Company First --</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Vehicle Number</label>
+          <select id="fVehicle" disabled>
+            <option value="">-- Select Company First --</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Petrol Bunk / Station</label>
+          <select id="fStation" disabled>
+            <option value="">-- Select Company First --</option>
+          </select>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label>Fuel Type</label>
+            <select id="fFuel" disabled>
+              <option value="">-- Select --</option>
+              <option value="Petrol">Petrol</option>
+              <option value="Diesel">Diesel</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Authorized By</label>
+            <select id="fAuth" disabled>
+              <option value="">-- Select Company First --</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ── NEW: Amount / Full Tank ── -->
+        <div class="field">
+          <label>Amount / Full Tank</label>
+          <select id="fFillType" disabled onchange="onFillTypeChange()">
+            <option value="">-- Select --</option>
+            <option value="Full Tank">Full Tank</option>
+            <option value="Amount">Amount</option>
+          </select>
+        </div>
+        <div class="field" id="amountField" style="display: none">
+          <label>Amount (₹)</label>
+          <input
+            type="number"
+            id="fAmount"
+            min="1"
+            placeholder="Enter amount in ₹"
+          />
+        </div>
+
+        <div class="err" id="errMsg"></div>
+
+        <div class="btn-row">
+          <button onclick="resetForm()">Clear</button>
+          <button class="btn-dark" onclick="generateIndent()">
+            Print Indent
+          </button>
+        </div>
       </div>
-      <div class="field">
-        <label>Authorized By</label>
-        <select id="fAuth" disabled>
-          <option value="">-- Select Company First --</option>
-        </select>
+    </div>
+
+    <!-- ══ RECORDS ══ -->
+    <div id="page-records" class="page">
+      <div class="records-card">
+        <div class="rec-hdr">
+          <h3>Indent Records</h3>
+          <div
+            style="
+              display: flex;
+              gap: 8px;
+              align-items: center;
+              flex-wrap: wrap;
+            "
+          >
+            <span id="recCount" style="font-size: 11px; color: #666"
+              >0 records</span
+            >
+            <button
+              class="btn-red"
+              style="flex: none; padding: 5px 12px; font-size: 12px"
+              onclick="requireAdmin('clearRecords')"
+            >
+              Clear All 🔒
+            </button>
+            <button
+              class="btn-green"
+              style="flex: none; padding: 5px 12px; font-size: 12px"
+              onclick="exportExcel()"
+            >
+              Export Excel
+            </button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Indent No</th>
+                <th>Date</th>
+                <th>Company</th>
+                <th>Driver</th>
+                <th>Vehicle</th>
+                <th>Station</th>
+                <th>Fuel</th>
+                <th>Auth By</th>
+                <th>Amount / Full Tank</th>
+                <th>Print</th>
+              </tr>
+            </thead>
+            <tbody id="recBody">
+              <tr>
+                <td colspan="10" class="empty">No records yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="err" id="errMsg"></div>
+    <!-- PRINT AREA -->
+    <div id="printArea"></div>
 
-    <div class="btn-row">
-      <button onclick="resetForm()">Clear</button>
-      <button class="btn-dark" onclick="generateIndent()">Print Indent</button>
-    </div>
-  </div>
-</div>
+    <script>
+      // ── CONFIG ──
+      const ADMIN_PASS = "0820";
+      const LOGIN_PASS = "321";
 
-<!-- ══ RECORDS ══ -->
-<div id="page-records" class="page">
-  <div class="records-card">
-    <div class="rec-hdr">
-      <h3>Indent Records</h3>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <span id="recCount" style="font-size:11px;color:#666;">0 records</span>
-        <button class="btn-red"   style="flex:none;padding:5px 12px;font-size:12px;" onclick="requireAdmin('clearRecords')">Clear All 🔒</button>
-        <button class="btn-green" style="flex:none;padding:5px 12px;font-size:12px;" onclick="exportExcel()">Export Excel</button>
-      </div>
-    </div>
-    <div class="tbl-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Indent No</th>
-            <th>Date</th>
-            <th>Company</th>
-            <th>Driver</th>
-            <th>Vehicle</th>
-            <th>Station</th>
-            <th>Fuel</th>
-            <th>Auth By</th>
-          </tr>
-        </thead>
-        <tbody id="recBody">
-          <tr><td colspan="8" class="empty">No records yet.</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+      // ── STATE ──
+      let records = JSON.parse(localStorage.getItem("fi_records") || "[]");
+      let counter = parseInt(localStorage.getItem("fi_counter") || "1");
 
+      // Company details — always hardcoded, never overridden by localStorage
+      const companies = [
+        {
+          name: "Deepthi Traders",
+          drivers: ["VASU"],
+          vehicles: ["KA20D 2988", "KA20AA 4926", "KA20MB 5866 [BRV]"],
+          stations: [
+            "ANKUSH FUELS - SBRKTE",
+            "NANDI FUELS - YTNTI",
+            "ANIKA FUELS - HNSMKI",
+            "MAHALASA FUELS - BDKLKTE",
+          ],
+          authorizers: ["SS", "CH", "RDN"],
+        },
+        {
+          name: "Kalmargi Hardwares",
+          drivers: [
+            "PRAMOD",
+            "SACHIN",
+            "PRABHAKARA",
+            "EESHWARA",
+            "KESHAVA",
+            "NARAYANA",
+            "RAVINDRA",
+          ],
+          vehicles: [
+            "KA20AC 1177",
+            "KA20AA 9785",
+            "KA20AB 1110",
+            "KA20AA 4108",
+            "KA20AA 4828",
+            "KA20AB 4234",
+            "KA20AB 7926",
+            "KA20D 6864",
+            "KA20N 8695 [OMNI]",
+            "KA20MD 6394 [WAGNR]",
+            "KA20HA 9032 [ROYAL]",
+            "KA20ER 9010 [SCOOTY]",
+            "KA20EG 9615 [GLAMOR]",
+            "KA20ER 8952 [SPLENDOR]",
+          ],
+          stations: [
+            "ANKUSH FUELS - SBRKTE",
+            "NANDI FUELS - YTNTI",
+            "ANIKA FUELS - HNSMKI",
+            "MAHALASA FUELS - BDKLKTE",
+          ],
+          authorizers: ["SS", "CH", "RDN"],
+        },
+      ];
 
+      function save() {
+        localStorage.setItem("fi_records", JSON.stringify(records));
+        localStorage.setItem("fi_counter", String(counter));
+      }
 
-<!-- PRINT AREA -->
-<div id="printArea"></div>
+      // ── LOGIN ──
+      function doLogin() {
+        const val = document.getElementById("loginPw").value;
+        if (val === LOGIN_PASS) {
+          document.getElementById("loginScreen").classList.add("hidden");
+          document.getElementById("loginPw").value = "";
+          setTimeout(() => document.getElementById("fCompany").focus(), 100);
+        } else {
+          document.getElementById("loginErr").textContent =
+            "Incorrect password.";
+          document.getElementById("loginPw").value = "";
+          document.getElementById("loginPw").focus();
+        }
+      }
 
-<script>
-// ── CONFIG ──
-const ADMIN_PASS = '0820';
-const LOGIN_PASS = '321';
+      // ── INIT ──
+      window.onload = () => {
+        setLiveDate();
+        populateCompanies();
+        updateIndentNo();
+        renderTable();
+        setTimeout(() => document.getElementById("loginPw").focus(), 200);
+      };
 
-// ── STATE ──
-let records  = JSON.parse(localStorage.getItem('fi_records') || '[]');
-let counter  = parseInt(localStorage.getItem('fi_counter')   || '1');
+      // ── HELPERS ──
+      function setLiveDate() {
+        const n = new Date();
+        const days = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
+        const months = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        document.getElementById("dispDate").textContent =
+          days[n.getDay()] +
+          ", " +
+          n.getDate() +
+          " " +
+          months[n.getMonth()] +
+          " " +
+          n.getFullYear();
+      }
+      function todayISO() {
+        const n = new Date();
+        return (
+          n.getFullYear() + "-" + p2(n.getMonth() + 1) + "-" + p2(n.getDate())
+        );
+      }
+      function p2(n) {
+        return String(n).padStart(2, "0");
+      }
 
-// Company details — always hardcoded, never overridden by localStorage
-const companies = [
-  {
-    name: 'Deepthi Traders',
-    drivers: ['VASU'],
-    vehicles: ['KA20D 2988','KA20AA 4926','KA20MB 5866 [BRV]'],
-    stations: ['ANKUSH FUELS - SBRKTE','NANDI FUELS - YTNTI','ANIKA FUELS - HNSMKI','MAHALASA FUELS - BDKLKTE'],
-    authorizers: ['SS','CH','RDN']
-  },
-  {
-    name: 'Kalmargi Hardwares',
-    drivers: ['PRAMOD','SACHIN','PRABHAKARA','EESHWARA','KESHAVA','NARAYANA','RAVINDRA'],
-    vehicles: ['KA20AC 1177','KA20AA 9785','KA20AB 1110','KA20AA 4108','KA20AA 4828','KA20AB 4234','KA20AB 7926','KA20D 6864','KA20N 8695 [OMNI]','KA20MD 6394 [WAGNR]','KA20HA 9032 [ROYAL]','KA20ER 9010 [SCOOTY]','KA20EG 9615 [GLAMOR]','KA20ER 8952 [SPLENDOR]'],
-    stations: ['ANKUSH FUELS - SBRKTE','NANDI FUELS - YTNTI','ANIKA FUELS - HNSMKI','MAHALASA FUELS - BDKLKTE'],
-    authorizers: ['SS','CH','RDN']
-  }
-];
+      // ── CHANGE: indent format is now 3-digit without "FI-" prefix ──
+      function updateIndentNo() {
+        document.getElementById("dispIndentNo").textContent = String(
+          counter,
+        ).padStart(3, "0");
+      }
+      function fmtDate(s) {
+        if (!s) return "";
+        const [y, m, d] = s.split("-");
+        return (
+          d +
+          "-" +
+          [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ][+m - 1] +
+          "-" +
+          y
+        );
+      }
 
-function save() {
-  localStorage.setItem('fi_records', JSON.stringify(records));
-  localStorage.setItem('fi_counter', String(counter));
-}
+      // ── COMPANY / FORM ──
+      function populateCompanies() {
+        const sel = document.getElementById("fCompany");
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">-- Select Company --</option>';
+        companies.forEach((c, i) => {
+          const o = document.createElement("option");
+          o.value = i;
+          o.textContent = c.name;
+          sel.appendChild(o);
+        });
+        if (cur !== "") sel.value = cur;
+      }
 
-// ── LOGIN ──
-function doLogin() {
-  const val = document.getElementById('loginPw').value;
-  if (val === LOGIN_PASS) {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('loginPw').value = '';
-    setTimeout(() => document.getElementById('fCompany').focus(), 100);
-  } else {
-    document.getElementById('loginErr').textContent = 'Incorrect password.';
-    document.getElementById('loginPw').value = '';
-    document.getElementById('loginPw').focus();
-  }
-}
+      function onCompanyChange() {
+        const idx = document.getElementById("fCompany").value;
+        // ── CHANGE: added 'fFillType' to deps ──
+        const deps = [
+          "fDriver",
+          "fVehicle",
+          "fStation",
+          "fAuth",
+          "fFuel",
+          "fFillType",
+        ];
+        if (idx === "") {
+          deps.forEach((id) => {
+            const el = document.getElementById(id);
+            el.disabled = true;
+            el.innerHTML =
+              id === "fFuel" || id === "fFillType"
+                ? '<option value="">-- Select --</option>'
+                : '<option value="">-- Select Company First --</option>';
+          });
+          // Hide amount field when company is deselected
+          document.getElementById("amountField").style.display = "none";
+          document.getElementById("fAmount").value = "";
+          return;
+        }
+        const c = companies[parseInt(idx)];
+        deps.forEach((id) => (document.getElementById(id).disabled = false));
+        fillSel("fDriver", c.drivers);
+        fillSel("fVehicle", c.vehicles);
+        fillSel("fStation", c.stations);
+        fillSel("fAuth", c.authorizers);
+        document.getElementById("fFuel").value = "";
+        document.getElementById("fFillType").value = "";
+        document.getElementById("amountField").style.display = "none";
+        document.getElementById("fAmount").value = "";
+      }
 
-// ── INIT ──
-window.onload = () => {
-  setLiveDate();
-  populateCompanies();
-  updateIndentNo();
-  renderTable();
-  setTimeout(() => document.getElementById('loginPw').focus(), 200);
-};
+      // ── NEW: toggle amount input based on fill type selection ──
+      function onFillTypeChange() {
+        const val = document.getElementById("fFillType").value;
+        const amountField = document.getElementById("amountField");
+        if (val === "Amount") {
+          amountField.style.display = "block";
+          document.getElementById("fAmount").focus();
+        } else {
+          amountField.style.display = "none";
+          document.getElementById("fAmount").value = "";
+        }
+      }
 
-// ── HELPERS ──
-function setLiveDate() {
-  const n = new Date();
-  const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('dispDate').textContent =
-    days[n.getDay()] + ', ' + n.getDate() + ' ' + months[n.getMonth()] + ' ' + n.getFullYear();
-}
-function todayISO() {
-  const n = new Date();
-  return n.getFullYear() + '-' + p2(n.getMonth()+1) + '-' + p2(n.getDate());
-}
-function p2(n) { return String(n).padStart(2,'0'); }
-function updateIndentNo() {
-  document.getElementById('dispIndentNo').textContent = 'FI-' + String(counter).padStart(4,'0');
-}
-function fmtDate(s) {
-  if (!s) return '';
-  const [y,m,d] = s.split('-');
-  return d+'-'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+'-'+y;
-}
+      function fillSel(id, items) {
+        const s = document.getElementById(id);
+        s.innerHTML = '<option value="">-- Select --</option>';
+        (items || []).forEach((v) => {
+          const o = document.createElement("option");
+          o.value = v;
+          o.textContent = v;
+          s.appendChild(o);
+        });
+      }
 
-// ── COMPANY / FORM ──
-function populateCompanies() {
-  const sel = document.getElementById('fCompany');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">-- Select Company --</option>';
-  companies.forEach((c,i) => {
-    const o = document.createElement('option');
-    o.value = i; o.textContent = c.name; sel.appendChild(o);
-  });
-  if (cur !== '') sel.value = cur;
-}
+      // ── FORM DATA & VALIDATE ──
+      function getForm() {
+        const ci = document.getElementById("fCompany").value;
+        const fillType = document.getElementById("fFillType").value;
+        const amount = document.getElementById("fAmount").value;
+        return {
+          // ── CHANGE: indent format is now 3-digit without "FI-" prefix ──
+          indentNo: String(counter).padStart(3, "0"),
+          date: todayISO(),
+          ts: Date.now(),
+          company: ci !== "" ? companies[parseInt(ci)].name : "",
+          driver: document.getElementById("fDriver").value,
+          vehicle: document.getElementById("fVehicle").value,
+          station: document.getElementById("fStation").value,
+          fuel: document.getElementById("fFuel").value,
+          auth: document.getElementById("fAuth").value,
+          fillType: fillType,
+          amount: fillType === "Amount" ? amount : "",
+        };
+      }
 
-function onCompanyChange() {
-  const idx  = document.getElementById('fCompany').value;
-  const deps = ['fDriver','fVehicle','fStation','fAuth','fFuel'];
-  if (idx === '') {
-    deps.forEach(id => {
-      const el = document.getElementById(id);
-      el.disabled = true;
-      el.innerHTML = '<option value="">-- Select Company First --</option>';
-    });
-    return;
-  }
-  const c = companies[parseInt(idx)];
-  deps.forEach(id => document.getElementById(id).disabled = false);
-  fillSel('fDriver',  c.drivers);
-  fillSel('fVehicle', c.vehicles);
-  fillSel('fStation', c.stations);
-  fillSel('fAuth',    c.authorizers);
-  document.getElementById('fFuel').value = '';
-}
+      function validate(d) {
+        const e = document.getElementById("errMsg");
+        const checks = [
+          [!d.company, "Select a company."],
+          [!d.driver, "Select driver name."],
+          [!d.vehicle, "Select vehicle number."],
+          [!d.station, "Select petrol bunk / station."],
+          [!d.fuel, "Select fuel type."],
+          [!d.auth, "Select authorized by."],
+          [!d.fillType, "Select Amount or Full Tank."],
+          [
+            d.fillType === "Amount" &&
+              (!d.amount || isNaN(d.amount) || Number(d.amount) <= 0),
+            "Enter a valid amount in ₹.",
+          ],
+        ];
+        for (const [fail, msg] of checks) {
+          if (fail) {
+            e.textContent = msg;
+            return false;
+          }
+        }
+        e.textContent = "";
+        return true;
+      }
 
-function fillSel(id, items) {
-  const s = document.getElementById(id);
-  s.innerHTML = '<option value="">-- Select --</option>';
-  (items||[]).forEach(v => {
-    const o = document.createElement('option');
-    o.value = v; o.textContent = v; s.appendChild(o);
-  });
-}
-
-// ── FORM DATA & VALIDATE ──
-function getForm() {
-  const ci = document.getElementById('fCompany').value;
-  return {
-    indentNo : 'FI-' + String(counter).padStart(4,'0'),
-    date     : todayISO(),
-    ts       : Date.now(),
-    company  : ci !== '' ? companies[parseInt(ci)].name : '',
-    driver   : document.getElementById('fDriver').value,
-    vehicle  : document.getElementById('fVehicle').value,
-    station  : document.getElementById('fStation').value,
-    fuel     : document.getElementById('fFuel').value,
-    auth     : document.getElementById('fAuth').value
-  };
-}
-
-function validate(d) {
-  const e = document.getElementById('errMsg');
-  const checks = [
-    [!d.company, 'Select a company.'],
-    [!d.driver,  'Select driver name.'],
-    [!d.vehicle, 'Select vehicle number.'],
-    [!d.station, 'Select petrol bunk / station.'],
-    [!d.fuel,    'Select fuel type.'],
-    [!d.auth,    'Select authorized by.']
-  ];
-  for (const [fail, msg] of checks) { if (fail) { e.textContent = msg; return false; } }
-  e.textContent = ''; return true;
-}
-
-// ── PRINT TEMPLATE ──
-function buildPrint(d) {
-  const blk = (lbl, val) => `
+      // ── PRINT TEMPLATE ──
+      function buildPrint(d) {
+        const blk = (lbl, val) => `
     <div class="p-block">
       <div class="p-lbl">${lbl}</div>
       <div class="p-val">${val}</div>
     </div>`;
-  return `
+
+        // ── NEW: show amount or FULL TANK in print ──
+        const fillDisplay =
+          d.fillType === "Amount"
+            ? `<div class="p-amount">₹ ${Number(d.amount).toLocaleString("en-IN")}</div>`
+            : `<div class="p-amount">FULL TANK</div>`;
+
+        return `
   <div class="p-center p-big">FUEL INDENT</div>
   <div class="p-center p-sm">${d.company}</div>
   <div class="p-dbl"></div>
-  ${blk('Indent No', d.indentNo)}
-  ${blk('Date', fmtDate(d.date))}
+  ${blk("Indent No", d.indentNo)}
+  ${blk("Date", fmtDate(d.date))}
   <div class="p-line"></div>
-  ${blk('Driver',  d.driver)}
-  ${blk('Vehicle', d.vehicle)}
-  ${blk('Station', d.station)}
-  ${blk('Fuel',    d.fuel)}
+  ${blk("Driver", d.driver)}
+  ${blk("Vehicle", d.vehicle)}
+  ${blk("Station", d.station)}
+  ${blk("Fuel", d.fuel)}
   <div class="p-dbl"></div>
-  <div class="p-amount">FULL TANK</div>
+  ${fillDisplay}
   <div class="p-dbl"></div>
-  ${blk('Authorized By', d.auth)}
+  ${blk("Authorized By", d.auth)}
   <div class="p-gap"></div>`;
-}
+      }
 
-// ── GENERATE & PRINT ──
-function generateIndent() {
-  const d = getForm();
-  if (!validate(d)) return;
-  records.push(d);
-  counter++;
-  save();
-  updateIndentNo();
-  renderTable();
-  document.getElementById('printArea').innerHTML = buildPrint(d);
-  setTimeout(() => window.print(), 200);
-}
+      // ── GENERATE & PRINT ──
+      function generateIndent() {
+        const d = getForm();
+        if (!validate(d)) return;
+        records.push(d);
+        counter++;
+        save();
+        updateIndentNo();
+        renderTable();
+        document.getElementById("printArea").innerHTML = buildPrint(d);
+        // ── CHANGE: clear form after printing ──
+        setTimeout(() => {
+          window.print();
+          resetForm();
+        }, 200);
+      }
 
-function resetForm() {
-  document.getElementById('fCompany').value = '';
-  document.getElementById('errMsg').textContent = '';
-  onCompanyChange();
-}
+      function resetForm() {
+        document.getElementById("fCompany").value = "";
+        document.getElementById("errMsg").textContent = "";
+        // ── CHANGE: also reset the new fill type and amount fields ──
+        document.getElementById("fFillType").value = "";
+        document.getElementById("amountField").style.display = "none";
+        document.getElementById("fAmount").value = "";
+        onCompanyChange();
+      }
 
-// ── RECORDS TABLE ──
-function renderTable() {
-  const body = document.getElementById('recBody');
-  document.getElementById('recCount').textContent = records.length + ' record(s)';
-  if (!records.length) {
-    body.innerHTML = '<tr><td colspan="8" class="empty">No records yet.</td></tr>';
-    return;
-  }
-  body.innerHTML = [...records].reverse().map(r => `
+      // ── RECORDS TABLE ──
+      function renderTable() {
+        const body = document.getElementById("recBody");
+        document.getElementById("recCount").textContent =
+          records.length + " record(s)";
+        if (!records.length) {
+          body.innerHTML =
+            '<tr><td colspan="10" class="empty">No records yet.</td></tr>';
+          return;
+        }
+
+        // ── CHANGE: ascending order — oldest at top, newest at bottom (no .reverse()) ──
+        body.innerHTML = records
+          .map((r, i) => {
+            // Display for Amount/Full Tank column
+            const fillDisplay =
+              r.fillType === "Amount" && r.amount
+                ? "₹ " + Number(r.amount).toLocaleString("en-IN")
+                : r.fillType || "Full Tank";
+
+            return `
     <tr>
       <td>${r.indentNo}</td>
       <td>${fmtDate(r.date)}</td>
@@ -467,74 +1037,126 @@ function renderTable() {
       <td>${r.station}</td>
       <td>${r.fuel}</td>
       <td>${r.auth}</td>
-    </tr>`).join('');
-}
+      <td>${fillDisplay}</td>
+      <td><button class="btn-print" onclick="printRecord(${i})">🖨 Print</button></td>
+    </tr>`;
+          })
+          .join("");
+      }
 
-// ── CLEAR RECORDS ──
-function doClearRecords() {
-  records = []; counter = 1;
-  save();
-  updateIndentNo();
-  renderTable();
-}
+      // ── NEW: print a specific record from records tab ──
+      function printRecord(idx) {
+        const d = records[idx];
+        if (!d) return;
+        document.getElementById("printArea").innerHTML = buildPrint(d);
+        setTimeout(() => window.print(), 100);
+      }
 
-// ── EXPORT EXCEL ──
-function exportExcel() {
-  if (!records.length) { alert('No records to export.'); return; }
-  const rows = [
-    ['Indent No','Date','Company','Driver','Vehicle','Station','Fuel','Auth By'],
-    ...records.map(r => [r.indentNo, r.date, r.company, r.driver, r.vehicle, r.station, r.fuel, r.auth])
-  ];
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [12,12,22,16,16,28,8,10].map(w=>({wch:w}));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Fuel Indents');
-  XLSX.writeFile(wb, 'FuelIndents_' + todayISO() + '.xlsx');
-}
+      // ── CLEAR RECORDS ──
+      function doClearRecords() {
+        records = [];
+        counter = 1;
+        save();
+        updateIndentNo();
+        renderTable();
+      }
 
+      // ── EXPORT EXCEL ──
+      function exportExcel() {
+        if (!records.length) {
+          alert("No records to export.");
+          return;
+        }
+        const rows = [
+          [
+            "Indent No",
+            "Date",
+            "Company",
+            "Driver",
+            "Vehicle",
+            "Station",
+            "Fuel",
+            "Auth By",
+            "Amount / Full Tank",
+          ],
+          ...records.map((r) => {
+            const fillDisplay =
+              r.fillType === "Amount" && r.amount
+                ? "₹ " + r.amount
+                : r.fillType || "Full Tank";
+            return [
+              r.indentNo,
+              r.date,
+              r.company,
+              r.driver,
+              r.vehicle,
+              r.station,
+              r.fuel,
+              r.auth,
+              fillDisplay,
+            ];
+          }),
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws["!cols"] = [10, 12, 22, 16, 16, 28, 8, 10, 18].map((w) => ({
+          wch: w,
+        }));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Fuel Indents");
+        XLSX.writeFile(wb, "FuelIndents_" + todayISO() + ".xlsx");
+      }
 
+      // ── TABS ──
+      function showTab(name) {
+        const names = ["indent", "records"];
+        document
+          .querySelectorAll(".tab")
+          .forEach((t, i) => t.classList.toggle("active", names[i] === name));
+        document
+          .querySelectorAll(".page")
+          .forEach((p) => p.classList.remove("active"));
+        document.getElementById("page-" + name).classList.add("active");
+        if (name === "records") renderTable();
+      }
 
-// ── TABS ──
-function showTab(name) {
-  const names = ['indent','records'];
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===name));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  if (name === 'records') renderTable();
-}
-
-// ── ADMIN MODAL ──
-let _pwTarget = null;
-function requireAdmin(target) {
-  _pwTarget = target;
-  document.getElementById('pwTitle').textContent =
-    target === 'clearRecords' ? 'Admin: Clear All Records' : 'Admin: Settings';
-  document.getElementById('pwInput').value = '';
-  document.getElementById('pwErr').textContent = '';
-  document.getElementById('pwModal').classList.add('show');
-  setTimeout(() => document.getElementById('pwInput').focus(), 120);
-}
-function pwCancel() {
-  document.getElementById('pwModal').classList.remove('show');
-  _pwTarget = null;
-}
-function pwSubmit() {
-  const val = document.getElementById('pwInput').value;
-  if (val !== ADMIN_PASS) {
-    document.getElementById('pwErr').textContent = 'Incorrect password.';
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwInput').focus();
-    return;
-  }
-  document.getElementById('pwModal').classList.remove('show');
-  const target = _pwTarget;
-  _pwTarget = null;
-  if (target === 'clearRecords') {
-    if (confirm('Delete ALL indent records permanently? This cannot be undone.')) {
-      doClearRecords();
-    }
-  }
-}
-</script>
-</body>
+      // ── ADMIN MODAL ──
+      let _pwTarget = null;
+      function requireAdmin(target) {
+        _pwTarget = target;
+        document.getElementById("pwTitle").textContent =
+          target === "clearRecords"
+            ? "Admin: Clear All Records"
+            : "Admin: Settings";
+        document.getElementById("pwInput").value = "";
+        document.getElementById("pwErr").textContent = "";
+        document.getElementById("pwModal").classList.add("show");
+        setTimeout(() => document.getElementById("pwInput").focus(), 120);
+      }
+      function pwCancel() {
+        document.getElementById("pwModal").classList.remove("show");
+        _pwTarget = null;
+      }
+      function pwSubmit() {
+        const val = document.getElementById("pwInput").value;
+        if (val !== ADMIN_PASS) {
+          document.getElementById("pwErr").textContent = "Incorrect password.";
+          document.getElementById("pwInput").value = "";
+          document.getElementById("pwInput").focus();
+          return;
+        }
+        document.getElementById("pwModal").classList.remove("show");
+        const target = _pwTarget;
+        _pwTarget = null;
+        if (target === "clearRecords") {
+          if (
+            confirm(
+              "Delete ALL indent records permanently? This cannot be undone.",
+            )
+          ) {
+            doClearRecords();
+          }
+        }
+      }
+    </script>
+  </body>
 </html>
